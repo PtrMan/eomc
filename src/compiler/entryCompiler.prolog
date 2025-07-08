@@ -42,17 +42,24 @@ entryCompiler :-
     List__EntryPredicateArgs = ['A', 'B'],
     
 
-    emitPrologFunctionOfMettaFunctionDefinition(MettaFunctionDef0, Ctx0, Ctx1, List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes),
+    emitPrologFunctionOfMettaFunctionDefinition(MettaFunctionDef0, Ctx0, Ctx1, List__EntryPredicateArgs, Str__SrcProlog__generated, Int__PredicateIdRes),
     
     nl,
     nl,
     nl,
-    print(Str__SrcProlog__dest),
+    print(Str__SrcProlog__generated),
     nl,
 
 
+    Str__pathToPrologRuntimeSrc = './src/runtime/runtimeProlog.prolog',
+    read_file_to_string(Str__pathToPrologRuntimeSrc, Str__srcProlog__runtime, []),
+
+    % bundle up with runtime
+    strConcat([Str__srcProlog__runtime, '\n', Str__SrcProlog__generated],   Str__srcProlog__output),
+
+
     Str__pathOfOutput = 'generated0.prolog',
-    write_string_to_file(Str__pathOfOutput, Str__SrcProlog__dest),
+    write_string_to_file(Str__pathOfOutput, Str__srcProlog__output),
 
 
 
