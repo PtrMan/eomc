@@ -171,6 +171,7 @@ emitHelper__letUniversal__genCodeForLetAssignments([letAssignment(Str__destVarna
 % we emit every "primitive MeTTa operation" as Prolog functions because this simplifies emitting correct code for matching MeTTa expressions
 
 
+/*
 
 % emit single prolog function with body of AST expression
 %
@@ -261,10 +262,12 @@ emitPrologFunctionForAst__Recursive(astNode(Str__mettaFnName,[Arg0]), ctx(PredId
     
     
 	true.
+*/
 
 
+emitPrologFunctionForAst__Recursive(Val, ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, PredIdCounterIn) :-
+    number(Val), % Val must be a number!
 
-emitPrologFunctionForAst__Recursive(astNode(assignConstInt, Val), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, PredIdCounterIn) :-
     %%%Int__PredicateIdRes = PredIdCounterIn, % assign id of generated prolog predicate
     PredIdCounterOut is PredIdCounterIn + 1,
     
@@ -291,7 +294,7 @@ emitPrologFunctionForAst__Recursive(astNode(assignConstInt, Val), ctx(PredIdCoun
 %  emitPrologFunctionForAst__Recursive(astNode(assignConstInt, 2), ctx(0), ctx(PredIdCounterOut), [], Str__srcProlog__predicate, Int__PredicateIdRes).
 
 
-
+% FIXME MID : needs to get overhauled to the new AST-representation
 emitPrologFunctionForAst__Recursive(astNode(retrieveValueByName, Str__Name), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
 	
     Int__PredicateIdRes is PredIdCounterIn, % assign id of generated prolog predicate
@@ -330,6 +333,7 @@ emitPrologFunctionForAst__Recursive(astNode(retrieveValueByName, Str__Name), ctx
 % AST-node letUniversal assigns letAsssignment(<VAR DEST NAME>, <SOURCE AST>) before executing <AST child>
 % astNode(letUniversal, Arr__letAssignments, AstNode__child)
 
+% FIXME MID : needs to get overhauled to the new AST implementation
 emitPrologFunctionForAst__Recursive(astNode(letUniversal, Arr__letAssignments, AstNode__child), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
 	
     Int__PredicateIdRes is PredIdCounterIn, % assign id of generated prolog predicate
@@ -382,7 +386,8 @@ extractCallsitesAndPredicateCodeFromListOfPredicateSiteInfo([tuplePredicateSiteI
 % AST-node to invoke a metta function
 % astNode(invokeFunction, <NAME>, <ARRAY OF AST-NODES OF ARGUMENTS>)
 
-emitPrologFunctionForAst__Recursive(astNode(invokeFunction, Str__nameOfFunction, Arr__astNodesOfArguments), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
+
+emitPrologFunctionForAst__Recursive(decoratedMettaExpr(invokeFunction(Str__nameOfFunction),Arr__astNodesOfArguments), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
 	
     allocatePredicate(PredIdCounterIn, PredIdCounter1, List__EntryPredicateArgs,   Int__PredicateIdRes, Str__srcProlog__predicateHead), % allocate new predicate, generate head of predicate
     
@@ -482,8 +487,7 @@ genPredicateInvocation(AstNode__body, Str__varnameOfResult,  ctx(PredIdCounterIn
 
 
 % conditional
-
-emitPrologFunctionForAst__Recursive(astNode(cond, AstNode__Cond, AstNode__TrueCodepath, AstNode__FalseCodepath), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
+emitPrologFunctionForAst__Recursive(decoratedMettaExpr(cond,[AstNode__Cond, AstNode__TrueCodepath, AstNode__FalseCodepath]), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
 
 	allocatePredicate(PredIdCounterIn, PredIdCounter1, List__EntryPredicateArgs,   Int__PredicateIdRes, Str__srcProlog__predicateHead), % allocate new predicate, generate head of predicate
     
@@ -655,7 +659,7 @@ emitPrologFunctionOfMettaFunctionDefinition(mettaFunctionDefinition(Str__functio
 
 
 
-
+/* commented because outdated
 
 
 % manual test to look at code generated for condition
@@ -760,6 +764,7 @@ true.
 
 
 
+*/
 
 
 
@@ -773,8 +778,7 @@ true.
 
 
 
-% astExpr(...) is a AST expression, for example mettaExpr([5])
-
+% TODO : overhaul to use the new decoratedMettaExpr and emits mettaExpr(<LIST>)
 
 
 % helper to convert list of AST-expression to list of strings of prolog target code
