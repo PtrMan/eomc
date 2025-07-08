@@ -28,6 +28,12 @@ strConcat([Str__head|T], Str__dest) :-
 strFormat(Str_format, Arr__args,   Str__output) :-
     format(string(Str__output), Str_format, Arr__args).
 
+zipListStrWithPrefix([], _,   []).
+zipListStrWithPrefix([Str__head__varname|List__tailOf__varnames], Str__prefix,   [Str__result|List__varnamesWithPrefixes]) :-
+    zipListStrWithPrefix(List__tailOf__varnames, Str__prefix,   List__varnamesWithPrefixes),
+    strConcat([Str__prefix, Str__head__varname],   Str__result).
+
+
 
 
 
@@ -91,6 +97,16 @@ genPrologSrcPredicateHead(Int__PredicateId, Str__SrcProlog__Args, Str__VarnameOu
 
 
 
+
+% convert list of variablenames to string with comma string
+convListOfVariablesAndPrefixToStringAndComma(List__varnames, Str__prefix,    Str__srcProlog__predicateArgs, Str__srcProlog__predicateArgsComma) :-
+
+    count(List__varnames,   Int__n), % count how many elements are in list
+    zipListStrWithPrefix(List__varnames, Str__prefix,   List__varnamesWithPrefixes),
+    
+    listStrJoinComma(List__varnamesWithPrefixes, Str__srcProlog__predicateArgs), % join list of variable names to string
+    
+    ( Int__n > 0 -> Str__srcProlog__predicateArgsComma = ',' ; Str__srcProlog__predicateArgsComma = '' ).
 
 
 
@@ -248,8 +264,8 @@ emitPrologFunctionForAst__Recursive(astNode(Str__mettaFnName,[Arg0]), ctx(PredId
 
 
 
-emitPrologFunctionForAst__Recursive(astNode(assignConstInt, Val), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
-    Int__PredicateIdRes is PredIdCounterIn, % assign id of generated prolog predicate
+emitPrologFunctionForAst__Recursive(astNode(assignConstInt, Val), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, PredIdCounterIn) :-
+    %%%Int__PredicateIdRes = PredIdCounterIn, % assign id of generated prolog predicate
     PredIdCounterOut is PredIdCounterIn + 1,
     
     
@@ -260,7 +276,7 @@ emitPrologFunctionForAst__Recursive(astNode(assignConstInt, Val), ctx(PredIdCoun
     
     
     % we have to emit the leading Prolog predicate head
-    format(string(T0), 'pred~w(runtimeCtx(), runtimeCtx(), ~w, Res) :-~n', [Int__PredicateIdRes, Str__SrcProlog__Args]),
+    format(string(T0), 'pred~w(runtimeCtx(), runtimeCtx(), ~w, Res) :-~n', [PredIdCounterIn, Str__SrcProlog__Args]),
     
     format(string(T1), '   Res is ~w,~n', [Val]),
     
@@ -270,6 +286,10 @@ emitPrologFunctionForAst__Recursive(astNode(assignConstInt, Val), ctx(PredIdCoun
     strConcat([T0, T1, T2], Str__SrcProlog__dest),
     
 	true.
+
+% manual test
+%  emitPrologFunctionForAst__Recursive(astNode(assignConstInt, 2), ctx(0), ctx(PredIdCounterOut), [], Str__srcProlog__predicate, Int__PredicateIdRes).
+
 
 
 emitPrologFunctionForAst__Recursive(astNode(retrieveValueByName, Str__Name), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
@@ -354,13 +374,13 @@ emitPrologFunctionForAst__Recursive(astNode(letUniversal, Arr__letAssignments, A
 
 
 
-
+extractCallsitesAndPredicateCodeFromListOfPredicateSiteInfo([],   [], []).
+extractCallsitesAndPredicateCodeFromListOfPredicateSiteInfo([tuplePredicateSiteInfo(Str__srcProlog__predicate, Str__srcProlog__invocationSite, Int__PredicateIdRes)|List__tail],    [Str__srcProlog__invocationSite|List__tail__str__srcProlog__invocationsites], [Str__srcProlog__predicate|List__tail__str__predicatesOfArgs]) :-
+    extractCallsitesAndPredicateCodeFromListOfPredicateSiteInfo(List__tail,   List__tail__str__srcProlog__invocationsites, List__tail__str__predicatesOfArgs).
 
 
 % AST-node to invoke a metta function
 % astNode(invokeFunction, <NAME>, <ARRAY OF AST-NODES OF ARGUMENTS>)
-
-% TODO : generate code for arguments
 
 emitPrologFunctionForAst__Recursive(astNode(invokeFunction, Str__nameOfFunction, Arr__astNodesOfArguments), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
 	
@@ -380,16 +400,104 @@ emitPrologFunctionForAst__Recursive(astNode(invokeFunction, Str__nameOfFunction,
     helperForAst__genArgumentsForInvocationOfPredicate('ResultFromPredicate', List__varnamesOfArguments,  Int__n),
     listStrJoinComma(List__varnamesOfArguments, Str__srcProlog__predicateArgs), % join list of variable names to string
     
+
+
+    % * generate prolog code of invoked functions
+    genPredicateInvocations(Arr__astNodesOfArguments, List__varnamesOfArguments,  ctx(PredIdCounter1), ctx(PredIdCounter2), List__EntryPredicateArgs,   List__tuple__predicateSiteInfo),
+    extractCallsitesAndPredicateCodeFromListOfPredicateSiteInfo(List__tuple__predicateSiteInfo,    List__str__srcProlog__callsites, List__str__predicatesOfArgs), % extract predicates and callsite from list
+
+    strConcat(List__str__srcProlog__callsites, Str__srcProlog__callsites),
+    strConcat(List__str__predicatesOfArgs, Str__srcProlog__predicatesOfArgs),
+    
+
+
     strFormat(' ~w(~w, Res), % invoke predicate of AST-node invokeFunction\n', [Str__srcProlog__nameOfCalledPredicate, Str__srcProlog__predicateArgs], Str__srcProlog__invokePredicate) , % generate code to invoke the predicate
     
     Str__srcProlog__predicateTail = ' true.\n',
     
-    strConcat([Str__srcProlog__predicateHead, Str__srcProlog__invokePredicate, Str__srcProlog__predicateTail],   Str__SrcProlog__dest),
+    strConcat([Str__srcProlog__predicatesOfArgs,  Str__srcProlog__predicateHead, Str__srcProlog__callsites, Str__srcProlog__invokePredicate, Str__srcProlog__predicateTail],   Str__SrcProlog__dest),
     
     
-    PredIdCounterOut is PredIdCounter1, % assign counter to output variable
+    PredIdCounterOut is PredIdCounter2, % assign counter to output variable
     
     true.
+
+% manual-test
+%   ?- emitPrologFunctionForAst__Recursive(astNode(invokeFunction, 'calledA', [ astNode(assignConstInt, 2)  ]), ctx(0), ctx(PredIdCounterOut), ['entryPredArg0'], Str__SrcProlog__dest, Int__PredicateIdRes).
+
+
+
+% generate code for invocations of a list of AstNodes to be stored into target variables
+% List__varnamesOfArguments,  Arr__astNodesOfArguments
+genPredicateInvocations([], [], ctx(PredIdCounter), ctx(PredIdCounter), List__EntryPredicateArgs,   []).
+genPredicateInvocations([AstNode__body|List__tail__astNodes], [Str__varnameOfResult|List__str__varnameOfResult], ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs,    [Tuple|List__tail__]) :-
+    
+    PredIdCounter0 is PredIdCounterIn,
+   
+    genPredicateInvocations(List__tail__astNodes, List__str__varnameOfResult, ctx(PredIdCounter0), ctx(PredIdCounter1), List__EntryPredicateArgs,   List__tail__),
+    
+    % generate invocation and body for head
+    genPredicateInvocation(AstNode__body, Str__varnameOfResult,  ctx(PredIdCounter1), ctx(PredIdCounter2), List__EntryPredicateArgs,   Tuple),
+
+    PredIdCounterOut is PredIdCounter2,
+    
+    true.
+
+
+% manual-test
+%    ?- genPredicateInvocations([astNode(assignConstInt, 2)], ['VRes0'],  ctx(0), ctx(PredIdCounterOut), ['a', 'b'],   List__tuple__predicateSiteInfo).
+
+
+
+% generate code for call to a predicate and of the body of the predicate itself
+genPredicateInvocation(AstNode__body, Str__varnameOfResult,  ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs,   Tuple) :-
+
+    % generate prolog code for body of AST-node
+    emitPrologFunctionForAst__Recursive(AstNode__body, ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__srcProlog__predicate, Int__PredicateIdRes2),
+
+
+    % convert List__EntryPredicateArgs to strings Str__srcProlog__predicateArgsComma and Str__srcProlog__predicateArgs
+    convListOfVariablesAndPrefixToStringAndComma(List__EntryPredicateArgs, 'VArg__',    Str__srcProlog__predicateArgs, Str__srcProlog__predicateArgsComma),
+
+    %%%print(Str__srcProlog__predicateArgs), % DBG
+
+
+    % generate prolog code for invocation-site
+    strFormat(' pred~w(runtimeCtx(), runtimeCtx() ~w~w,  ~w), % invoke predicate which implements body of argument\n', [Int__PredicateIdRes2, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs, Str__varnameOfResult],   Str__srcProlog__invocationSite),
+
+    Tuple = tuplePredicateSiteInfo(Str__srcProlog__predicate, Str__srcProlog__invocationSite, Int__PredicateIdRes2),
+
+    true.
+
+
+% manual-test
+%    ?- genPredicateInvocation(astNode(assignConstInt, 2), 'VRes0',  ctx(0), ctx(PredIdCounterOut), ['a', 'b'],   Tuple).
+
+
+/* commented because superseeded
+
+% for invocation of MeTTa function
+% generate callsite of invoked 
+genCallsiteForInvokedMettaFunction(Int__PredicateIdCalled, Str__srcProlog__resultVarname,  Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs,   Str__srcProlog__callsite) :-
+    strFormat(' pred~w(runtimeCtx(), runtimeCtx() ~w~w,  ~w), % invoke predicate which implements body of argument\n', [Int__PredicateIdCalled, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs, Str__srcProlog__resultVarname],   Str__srcProlog__callsite).
+
+genCallsitesForInvokedMettaFunctions([], Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs,  []).
+genCallsitesForInvokedMettaFunctions([predicateInvocation(Int__PredicateIdCalled, Str__srcProlog__resultVarname)|List__tail__predicateInvocations], Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs,  [Str__srcProlog__callsite|List__tail__Str__srcProlog__callsite]) :-
+    genCallsitesForInvokedMettaFunctions(List__tail__predicateInvocations, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs,   List__tail__Str__srcProlog__callsite),
+    genCallsiteForInvokedMettaFunction(Int__PredicateIdCalled, Str__srcProlog__resultVarname,  Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs,   Str__srcProlog__callsite),
+    true.
+
+% manual test
+% ?- genCallsitesForInvokedMettaFunctions([predicateInvocation(53, 'VRes0'),predicateInvocation(54, 'VRes1')], ',', 'DUMMYargs',  List__Str__srcProlog__c).
+% List__Str__srcProlog__c = [" pred53(runtimeCtx(), runtimeCtx() ,DUMMYargs,  VRes0), % invoke predicate which implements body of argument\n", " pred54(runtimeCtx(), runtimeCtx() ,DUMMYargs,  VRes1), % invoke predicate which implements body of argument\n"].
+
+
+% TODO : use genCallsitesForInvokedMettaFunctions()  in generation of function invocation
+
+*/
+
+
+
 
 
 
@@ -481,8 +589,6 @@ emitPrologFunctionForAst__Recursive(astNode(cond, AstNode__Cond, AstNode__TrueCo
 
 
 
-
-
 % allocates a new predicate for the prolog target  and also does some other stuff
 allocatePredicate(PredIdCounterIn, PredIdCounterOut, List__EntryPredicateArgs,   Int__PredicateIdRes, Str__srcProlog__predicateHead) :-
 	
@@ -530,9 +636,6 @@ helperForAst__genArgumentsForInvocationOfPredicate(Str__prefix, List,  Int__n) :
 
 % manual test
 % helperForAst__genArgumentsForInvocationOfPredicate('ResultFromPredicate', X,  1).
-
-
-
 
 
 
