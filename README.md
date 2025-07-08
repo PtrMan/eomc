@@ -30,6 +30,24 @@ source code is assumed to contain only one function declaration. Only integers a
 
 <br />
 
+#### support table of compiler+libraries
+
+| feature | parser | backend |
+| :--- | :--- | :--- |
+| function declaration | partial(one) | partial(one) |
+| function invocation | yes | yes |
+| variable definition/usage | no | (yes) |
+| conditionals | no | (yes) |
+| sequential | no | no |
+| datastructure declaration | no | no |
+| datastructure unification | - | no |
+
+| feature | parser | backend |
+| :--- | :--- | :--- |
+| basic math (cos, etc.) | - | no |
+| call into python | - | no |
 
 
+#### supported Prolog environments
 
+for the compiler swi-prolog is supported. Backend swi-prolog is supported and recommended. Other Prolog environments such as GNU-prolog could also work.
