@@ -40,7 +40,7 @@ source code is assumed to contain only one function declaration. Only integers a
 | function declaration | partial(one) | partial(one) |
 | function invocation | yes | yes |
 | variable definition/usage | no | (yes) |
-| conditionals | no | (yes) |
+| conditionals | yes | yes |
 | sequential | no | no |
 | datastructure declaration | no | no |
 | datastructure unification | - | no |
