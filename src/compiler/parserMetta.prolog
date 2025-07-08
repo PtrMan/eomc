@@ -1,7 +1,5 @@
-% DRAFT of MeTTa to prolog parser
+% MeTTa to prolog parser
 
-% run with
-%    swipl -s ./src/compiler/parserMetta.prolog -g manualtest_parserA -g halt
 
 % pack_install(tokenize).
 :- use_module(library(tokenize)).
@@ -39,7 +37,18 @@ brace2(parsedBrace(X)) --> [punct('(')],  braceContent(X).
 
 
 
-% test with
+
+functionDeclaration(functionDeclaration(Head, Body)) -->
+    [punct('('), punct('=')], 
+    brace2(Head),
+    brace2(Body),
+    [punct(')')].
+
+
+
+
+
+% manual test with
 % phrase(expr(Tree), [punct('('), word('TODO'), punct(')')]).
 
 
@@ -52,6 +61,11 @@ foldBrace(braceContent(H,T),   [FoldedHead|List__tail]) :-
 
 fold(parsedBrace(X),   parsedBrace2(FoldedContent)) :-
     foldBrace(X,  FoldedContent).
+
+fold(functionDeclaration(ParseTree__InputHead, ParseTree__InputBody),   functionDeclaration(ParseTree__ResultHead, ParseTree__ResultBody)) :-
+    fold(ParseTree__InputHead,   ParseTree__ResultHead),
+    fold(ParseTree__InputBody,   ParseTree__ResultBody).
+
 fold(X,   X).
 
 
@@ -89,6 +103,7 @@ convParseTreeToAst__braceHelper([H|T],   [Ast__head|List__ast__tail]) :-
 
 
 % convert parsing tree to AST
+convParseTreeToAst(parsedBrace2([]),   decoratedMettaExpr(nil, [])).
 convParseTreeToAst(parsedBrace2([literal(Atom)|List]),   decoratedMettaExpr(invokeFunction(Str), List__ast)) :-
     atom_string(Atom, Str), % convert atom to string!
 
@@ -108,6 +123,9 @@ convParseTreeToAst(parsedBrace2([literal('/')|List]),   astNode('/', List__ast))
 
 convParseTreeToAst(number_(Int),   Int).
 
+convParseTreeToAst(functionDeclaration(ParseTree__Head, ParseTree__Body),   functionDeclaration(Ast__Head, Ast__Body)) :-
+    convParseTreeToAst(ParseTree__Head,   Ast__Head),
+    convParseTreeToAst(ParseTree__Body,   Ast__Body).
 
 
 
@@ -128,16 +146,24 @@ parserForMetta(Str__srcMetta,   Ast__result) :-
     !, % throw all other tokenization away
 
     % DBG
-    print(Tokens2),
     nl,
+    nl,
+    print('tokens:'),
+    nl,
+    print(Tokens2),
 
 
-    phrase(expr(ParseTreeA), Tokens2),
+
+    phrase(functionDeclaration(ParseTreeA), Tokens2),
     !,
     
     % DBG
-    print(ParseTreeA),
     nl,
+    nl,
+    print('parse tree raw:'),
+    nl,
+    print(ParseTreeA),
+
     
     
     % we need to fold the parsing tree to get a more useful representation
@@ -145,8 +171,11 @@ parserForMetta(Str__srcMetta,   Ast__result) :-
     !,
     
     % DBG
-    print(ParseTreeB),
     nl,
+    nl,
+    print('parse tree folded:'),
+    nl,
+    print(ParseTreeB),
 
 
     convParseTreeToAst(ParseTreeB,   Ast__result),
@@ -154,24 +183,12 @@ parserForMetta(Str__srcMetta,   Ast__result) :-
 
 
     % DBG
-    print(Ast__result),
     nl,
+    nl,
+    print('AST:'),
+    nl,
+    print(Ast__result),
+
 
 
     true.
-
-
-
-
-
-manualtest_parserA :-
-
-    Str__srcMetta = '(add2 5 7)',
-
-    parserForMetta(Str__srcMetta,   Ast__result),
-    
-    true.
-
-% manualtest run with
-% ?- manualtest_parserA.
-

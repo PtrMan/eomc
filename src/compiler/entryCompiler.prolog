@@ -32,7 +32,11 @@ entryCompiler :-
 
 
 
-    MettaFunctionDef0 = mettaFunctionDefinition('exampleFunctionA', 2, Ast__result),
+    % MettaFunctionDef0 = mettaFunctionDefinition('exampleFunctionA', 2, Ast__result),
+
+    % HACKY : for now we assume only one function declaration in the metta code
+    functionDeclaration(Ast__head, Ast__body) = Ast__result,
+    MettaFunctionDef0 = mettaFunctionDefinition('exampleFunctionA', 2, Ast__body),
     
     
     Ctx0 = ctx(0),
