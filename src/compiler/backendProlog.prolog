@@ -411,7 +411,7 @@ emitPrologFunctionForAst__Recursive(astNode(invokeFunction, Str__nameOfFunction,
     
 
 
-    strFormat(' ~w(~w, Res), % invoke predicate of AST-node invokeFunction\n', [Str__srcProlog__nameOfCalledPredicate, Str__srcProlog__predicateArgs], Str__srcProlog__invokePredicate) , % generate code to invoke the predicate
+    strFormat(' ~w(runtimeCtx(), runtimeCtx(), ~w, Res), % invoke predicate of AST-node invokeFunction\n', [Str__srcProlog__nameOfCalledPredicate, Str__srcProlog__predicateArgs], Str__srcProlog__invokePredicate) , % generate code to invoke the predicate
     
     Str__srcProlog__predicateTail = ' true.\n',
     
@@ -472,29 +472,6 @@ genPredicateInvocation(AstNode__body, Str__varnameOfResult,  ctx(PredIdCounterIn
 
 % manual-test
 %    ?- genPredicateInvocation(astNode(assignConstInt, 2), 'VRes0',  ctx(0), ctx(PredIdCounterOut), ['a', 'b'],   Tuple).
-
-
-/* commented because superseeded
-
-% for invocation of MeTTa function
-% generate callsite of invoked 
-genCallsiteForInvokedMettaFunction(Int__PredicateIdCalled, Str__srcProlog__resultVarname,  Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs,   Str__srcProlog__callsite) :-
-    strFormat(' pred~w(runtimeCtx(), runtimeCtx() ~w~w,  ~w), % invoke predicate which implements body of argument\n', [Int__PredicateIdCalled, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs, Str__srcProlog__resultVarname],   Str__srcProlog__callsite).
-
-genCallsitesForInvokedMettaFunctions([], Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs,  []).
-genCallsitesForInvokedMettaFunctions([predicateInvocation(Int__PredicateIdCalled, Str__srcProlog__resultVarname)|List__tail__predicateInvocations], Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs,  [Str__srcProlog__callsite|List__tail__Str__srcProlog__callsite]) :-
-    genCallsitesForInvokedMettaFunctions(List__tail__predicateInvocations, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs,   List__tail__Str__srcProlog__callsite),
-    genCallsiteForInvokedMettaFunction(Int__PredicateIdCalled, Str__srcProlog__resultVarname,  Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs,   Str__srcProlog__callsite),
-    true.
-
-% manual test
-% ?- genCallsitesForInvokedMettaFunctions([predicateInvocation(53, 'VRes0'),predicateInvocation(54, 'VRes1')], ',', 'DUMMYargs',  List__Str__srcProlog__c).
-% List__Str__srcProlog__c = [" pred53(runtimeCtx(), runtimeCtx() ,DUMMYargs,  VRes0), % invoke predicate which implements body of argument\n", " pred54(runtimeCtx(), runtimeCtx() ,DUMMYargs,  VRes1), % invoke predicate which implements body of argument\n"].
-
-
-% TODO : use genCallsitesForInvokedMettaFunctions()  in generation of function invocation
-
-*/
 
 
 
