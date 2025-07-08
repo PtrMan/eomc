@@ -1,5 +1,8 @@
 % DRAFT of MeTTa to prolog parser
 
+% run with
+%    swipl -s ./src/compiler/parserMetta.prolog -g manualtest_parserA -g halt
+
 % pack_install(tokenize).
 :- use_module(library(tokenize)).
 
@@ -64,13 +67,31 @@ tokens__removeSpace([Token__head|List__tokens__tail],   [Token__head|List__tail]
 
 
 
+
+
+convParseTreeToAst__braceHelper([],   []).
+convParseTreeToAst__braceHelper([H|T],   [Ast__head|List__ast__tail]) :-
+    convParseTreeToAst(H,   Ast__head),
+    convParseTreeToAst__braceHelper(T,   List__ast__tail).
+
+
+% convert parsing tree to AST
+convParseTreeToAst(parsedBrace2([literal(Str)|List]),   astNode(invokeFunction, Str, List__ast)) :-
+    convParseTreeToAst__braceHelper(List,  List__ast).
+convParseTreeToAst(number_(Int),   astNode(assignConstInt, Int)).
+convParseTreeToAst(X,   X).
+
+
+
+
+
 parserForMetta(Str__srcMetta,   Ast__result) :-
 
     tokenize(Str__srcMetta, Tokens),
 
     % DBG
     print(Tokens),
-    print('\n'),
+    nl,
 
 
     tokens__removeSpace(Tokens,   Tokens2), 
@@ -78,7 +99,7 @@ parserForMetta(Str__srcMetta,   Ast__result) :-
 
     % DBG
     print(Tokens2),
-    print('\n'),
+    nl,
 
 
     phrase(expr(ParseTreeA), Tokens2),
@@ -86,7 +107,7 @@ parserForMetta(Str__srcMetta,   Ast__result) :-
     
     % DBG
     print(ParseTreeA),
-    print('\n'),
+    nl,
     
     
     % we need to fold the parsing tree to get a more useful representation
@@ -95,7 +116,18 @@ parserForMetta(Str__srcMetta,   Ast__result) :-
     
     % DBG
     print(ParseTreeB),
-    
+    nl,
+
+
+    convParseTreeToAst(ParseTreeB,   Ast__result),
+    !,
+
+
+    % DBG
+    print(Ast__result),
+    nl,
+
+
     true.
 
 
