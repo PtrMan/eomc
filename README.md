@@ -26,7 +26,7 @@ running with dumping generated code to terminal
 
 source code is assumed to contain only one function declaration. Only integers and calls to functions are supported at this stage.
 
-    (= (exampleFunctionA)  (*  (+ 2 3) 6) )
+    (= (exampleFunctionA)  (*  (+ 2.2 3) 6) )
 
 <br />
 
@@ -34,6 +34,9 @@ source code is assumed to contain only one function declaration. Only integers a
 
 | feature | parser | backend |
 | :--- | :--- | :--- |
+| datatype:boolean | yes | no |
+| datatype:int | yes | yes |
+| datatype:float | yes | yes |
 | function declaration | partial(one) | partial(one) |
 | function invocation | yes | yes |
 | variable definition/usage | no | (yes) |
@@ -42,9 +45,11 @@ source code is assumed to contain only one function declaration. Only integers a
 | datastructure declaration | no | no |
 | datastructure unification | - | no |
 
-| feature | parser | backend |
+| feature | parser | runtime |
 | :--- | :--- | :--- |
+| basic math (+, *, etc.) | - | yes |
 | basic math (cos, etc.) | - | no |
+| comparison | - | no |
 | call into python | - | no |
 
 
