@@ -12,6 +12,10 @@
 %    forall(member(X, Object), number(X)).
 
 
+expr(literal('+')) --> [punct(+)]. % is also a literal in metta
+expr(literal('-')) --> [punct(-)]. % is also a literal in metta
+expr(literal('*')) --> [punct(*)]. % is also a literal in metta
+expr(literal('/')) --> [punct(/)]. % is also a literal in metta
 
 expr(literal(Str)) --> [word(Str)].%, {checkIsString(Str)}.
 expr(boolean(true)) --> [word('true')].
@@ -78,9 +82,24 @@ convParseTreeToAst__braceHelper([H|T],   [Ast__head|List__ast__tail]) :-
 % convert parsing tree to AST
 convParseTreeToAst(parsedBrace2([literal(Atom)|List]),   astNode(invokeFunction, Str, List__ast)) :-
     atom_string(Atom, Str), % convert atom to string!
-    
+
     convParseTreeToAst__braceHelper(List,  List__ast).
+
+
+% HACKY to allow calling of built in algebra (for now)
+convParseTreeToAst(parsedBrace2([literal('+')|List]),   astNode('+', List__ast)) :-
+    convParseTreeToAst__braceHelper(List,  List__ast).
+convParseTreeToAst(parsedBrace2([literal('-')|List]),   astNode('-', List__ast)) :-
+    convParseTreeToAst__braceHelper(List,  List__ast).
+convParseTreeToAst(parsedBrace2([literal('*')|List]),   astNode('*', List__ast)) :-
+    convParseTreeToAst__braceHelper(List,  List__ast).
+convParseTreeToAst(parsedBrace2([literal('/')|List]),   astNode('/', List__ast)) :-
+    convParseTreeToAst__braceHelper(List,  List__ast).
+
 convParseTreeToAst(number_(Int),   astNode(assignConstInt, Int)).
+
+
+
 convParseTreeToAst(X,   X).
 
 
