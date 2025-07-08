@@ -416,7 +416,7 @@ emitPrologFunctionForAst__Recursive(decoratedMettaExpr(invokeFunction(Str__nameO
     
 
 
-    strFormat(' ~w(runtimeCtx(), runtimeCtx(), ~w, Res), % invoke predicate of AST-node invokeFunction\n', [Str__srcProlog__nameOfCalledPredicate, Str__srcProlog__predicateArgs], Str__srcProlog__invokePredicate) , % generate code to invoke the predicate
+    strFormat(' pred~w(runtimeCtx(), runtimeCtx(), ~w, Res), % invoke predicate of AST-node invokeFunction\n', [Str__srcProlog__nameOfCalledPredicate, Str__srcProlog__predicateArgs], Str__srcProlog__invokePredicate) , % generate code to invoke the predicate
     
     Str__srcProlog__predicateTail = ' true.\n',
     
@@ -634,7 +634,7 @@ emitPrologFunctionOfMettaFunctionDefinition(mettaFunctionDefinition(Str__functio
     ( Int__countOfArguments > 0 -> Str__srcProlog__predicateArgsComma = ',' ; Str__srcProlog__predicateArgsComma = '' ),
     
     
-    strFormat('__~w(runtimeCtx(), runtimeCtx() ~w~w,  Res) :-\n', [Str__functionname, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs],   Str__srcProlog__head),
+    strFormat('pred__~w(runtimeCtx(), runtimeCtx() ~w~w,  Res) :-\n', [Str__functionname, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs],   Str__srcProlog__head),
     
     % TODO : also take string with let variables into account (which are not bound in the callsite to values, because they are bound in the called let predicate(s))
     strFormat(' pred~w(runtimeCtx(), runtimeCtx() ~w~w,  Res), % invoke predicate which implements body of function written in metta\n', [Int__PredicateIdCalled, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs],   Str__srcProlog__invokeBodyPredicate),

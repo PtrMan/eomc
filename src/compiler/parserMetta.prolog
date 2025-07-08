@@ -104,6 +104,8 @@ convParseTreeToAst__braceHelper([H|T],   [Ast__head|List__ast__tail]) :-
 
 % convert parsing tree to AST
 convParseTreeToAst(parsedBrace2([]),   decoratedMettaExpr(nil, [])).
+convParseTreeToAst(parsedBrace2([literal('if')|List]),   decoratedMettaExpr(cond, List__ast)) :-
+    convParseTreeToAst__braceHelper(List,  List__ast).
 convParseTreeToAst(parsedBrace2([literal(Atom)|List]),   decoratedMettaExpr(invokeFunction(Str), List__ast)) :-
     atom_string(Atom, Str), % convert atom to string!
 

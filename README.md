@@ -40,8 +40,8 @@ source code is assumed to contain only one function declaration. Only integers a
 | function declaration | partial(one) | partial(one) |
 | function invocation | yes | yes |
 | variable definition/usage | no | (yes) |
-| conditionals | yes | yes |
-| sequential | no | no |
+| flow control: conditionals | yes | yes |
+| flow control: sequential | no | no |
 | datastructure declaration | no | no |
 | datastructure unification | - | no |
 
@@ -49,7 +49,7 @@ source code is assumed to contain only one function declaration. Only integers a
 | :--- | :--- | :--- |
 | basic math (+, *, etc.) | - | yes |
 | basic math (cos, etc.) | - | no |
-| comparison | - | no |
+| comparison | - | yes |
 | call into python | - | no |
 
 
