@@ -76,7 +76,9 @@ convParseTreeToAst__braceHelper([H|T],   [Ast__head|List__ast__tail]) :-
 
 
 % convert parsing tree to AST
-convParseTreeToAst(parsedBrace2([literal(Str)|List]),   astNode(invokeFunction, Str, List__ast)) :-
+convParseTreeToAst(parsedBrace2([literal(Atom)|List]),   astNode(invokeFunction, Str, List__ast)) :-
+    atom_string(Atom, Str), % convert atom to string!
+    
     convParseTreeToAst__braceHelper(List,  List__ast).
 convParseTreeToAst(number_(Int),   astNode(assignConstInt, Int)).
 convParseTreeToAst(X,   X).

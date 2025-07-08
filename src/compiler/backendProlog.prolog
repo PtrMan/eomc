@@ -566,6 +566,18 @@ emitPrologFunctionOfMettaFunctionDefinition(mettaFunctionDefinition(Str__functio
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 % manual test to look at code generated for condition
 manualtest__conditionA :-
     
