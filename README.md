@@ -12,5 +12,13 @@ install swi-prolog dependencies by running the prolog and confirming everything 
 
 #### how to run
 
+source source code is read from a0.metta
+
+basic running
+
     swipl -s ./src/compiler/entryCompiler.prolog -g entryCompiler -g halt
+
+running with dumping generated code to terminal
+
+    swipl -s ./src/compiler/entryCompiler.prolog -g entryCompiler -g halt    && echo "" && cat generated0.prolog
 
