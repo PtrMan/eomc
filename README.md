@@ -22,3 +22,14 @@ running with dumping generated code to terminal
 
     swipl -s ./src/compiler/entryCompiler.prolog -g entryCompiler -g halt    && echo "" && cat generated0.prolog
 
+#### basic source code examples
+
+source code is assumed to contain only one function declaration. Only integers and calls to functions are supported at this stage.
+
+    (= (exampleFunctionA)  (*  (+ 2 3) 6) )
+
+<br />
+
+
+
+
