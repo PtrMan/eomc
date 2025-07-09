@@ -25,17 +25,19 @@ entryCompiler :-
     nl,
 
     % * parse MeTTa
-    parserForMetta(Str__srcMetta,   Ast__root),
+    parserForMetta(Str__srcMetta,   List__ast),
 
 
     % * generate code with the prolog backend
 
+    ( true -> format("compile trace: gen code with prolog backend\n") ; true),
 
 
-    % MettaFunctionDef0 = mettaFunctionDefinition('exampleFunctionA', 2, Ast__result),
 
-    % HACKY : for now we assume only one function declaration in the metta code
-    Ast__functionDeclaration = Ast__root,
+
+
+    % HACKY : for now we assume only one function declaration in the metta code . we take the first function declaration
+    [Ast__functionDeclaration|_] = List__ast,
 
     
     Ctx0 = ctx(0),
@@ -52,8 +54,13 @@ entryCompiler :-
     Str__pathToPrologRuntimeSrc = './src/runtime/runtimeProlog.prolog',
     read_file_to_string(Str__pathToPrologRuntimeSrc, Str__srcProlog__runtime, []),
 
-    % bundle up with runtime
-    strConcat([Str__srcProlog__runtime, '\n', Str__SrcProlog__generated],   Str__srcProlog__output),
+
+    % HACK : entry code with hardcoded function to call into
+    Str__srcProlog__entry = "\n\n\nentry0 :-\n format(\"TRACE: ENTRY\\n\"),\n pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['examplefunctiona', 10]), _,   Res),\n format(\"~w\\n\", [Res]),\n true.\n",
+
+
+    % bundle up with runtime and code for entry
+    strConcat([Str__srcProlog__runtime, '\n', Str__SrcProlog__generated,  Str__srcProlog__entry],   Str__srcProlog__output),
 
 
     Str__pathOfOutput = 'generated0.prolog',
