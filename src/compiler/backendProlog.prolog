@@ -37,6 +37,26 @@ zipListStrWithPrefix([Str__head__varname|List__tailOf__varnames], Str__prefix,  
 
 
 
+% set manipulation
+
+set_contains([Val|_], Val,   true) :-
+    !. % cut because we returned value
+set_contains([_|Tail], Val,   Res) :-
+    set_contains(Tail, Val,   Res).
+set_contains([], _,   false).
+
+% put without checking if item is already in set
+set_put(Val, List,   [Val|List]).
+
+
+
+
+
+
+
+
+
+
 convArgToPrologVarName(Str__argName, Str__SrcPrologVarName) :-
     format(string(Str__SrcPrologVarName), 'VArg__~w', [Str__argName]).
 	% V stands for Variable
@@ -392,8 +412,6 @@ emitPrologFunctionForAst__Recursive(decoratedMettaExpr(invokeFunction(Str__nameO
     allocatePredicate(PredIdCounterIn, PredIdCounter1, List__EntryPredicateArgs,   Int__PredicateIdRes, Str__srcProlog__predicateHead), % allocate new predicate, generate head of predicate
     
     
-   
-    strFormat('__~w', [Str__nameOfFunction],   Str__srcProlog__nameOfCalledPredicate), % we need the name of the predicate to invoke
     
     
 
@@ -416,7 +434,7 @@ emitPrologFunctionForAst__Recursive(decoratedMettaExpr(invokeFunction(Str__nameO
     
 
 
-    strFormat(' pred~w(runtimeCtx(), runtimeCtx(), ~w, Res), % invoke predicate of AST-node invokeFunction\n', [Str__srcProlog__nameOfCalledPredicate, Str__srcProlog__predicateArgs], Str__srcProlog__invokePredicate) , % generate code to invoke the predicate
+    strFormat(' pred__(runtimeCtx(), runtimeCtx(), mettaExpr([\'~w\',~w]), _, Res), % invoke predicate of AST-node invokeFunction\n', [Str__nameOfFunction, Str__srcProlog__predicateArgs], Str__srcProlog__invokePredicate) , % generate code to invoke the predicate
     
     Str__srcProlog__predicateTail = ' true.\n',
     
@@ -620,10 +638,16 @@ helperForAst__genArgumentsForInvocationOfPredicate(Str__prefix, List,  Int__n) :
 
 
 
-% HALFDONE::: TODO HIGH : implement codeanalysis__decorateWithStatic() which decorates AST-nodes with the statically known controlflow type 
-
 % /param AstNode__headArgument   is the AST-node of the head of the MeTTa function definition as a decoratedMettaExpr(<DECORATION>, <CONTENT>)
 emitPrologFunctionOfMettaFunctionDefinition(mettaFunctionDefinition(AstNode__headArgument, AstNode__body__in), ctx(PredIdCounterIn), ctx(PredIdCounterOut), Str__SrcProlog__dest, Int__PredicateIdRes) :-
+
+
+    % we collect the variable names from the head of the function-definition from MeTTa
+    ast__collectVarNames(AstNode__headArgument, [],   Set__Str__headVariables),
+
+    %format("\nDBG  Set__Str__headVariables=\n"),
+    %format("~w\n", [Set__Str__headVariables]),
+
 
     %format('DBG  AstNode__body__in=\n'),
     %format('~w\n', [AstNode__body__in]),
@@ -638,33 +662,23 @@ emitPrologFunctionOfMettaFunctionDefinition(mettaFunctionDefinition(AstNode__hea
     % convert the head-argument to the Prolog source, which represents the head. Idea here is to leave the heavy lifting for unification to the prolog runtime of the prolog target
     convAstExprToTargetProlog(AstNode__headArgument, 'Varg__',    Str__srcProlog__headArgument),
 
-    format('DBG ~w\n', Str__srcProlog__headArgument),
+    %format('DBG ~w\n', Str__srcProlog__headArgument),
 
-    format('DBG  emit code for decorated body...\n'),
 
-    % HACK HACK
-    List__EntryPredicateArgs = ['a', 'b'],
+	emitPrologFunctionForAst__Recursive(AstNode__decoratedBody, ctx(PredIdCounterIn), ctx(PredIdCounter1), Set__Str__headVariables, Str__SrcProlog__ofPredicates, Int__PredicateIdCalled),
 
-	emitPrologFunctionForAst__Recursive(AstNode__decoratedBody, ctx(PredIdCounterIn), ctx(PredIdCounter1), List__EntryPredicateArgs, Str__SrcProlog__ofPredicates, Int__PredicateIdCalled),
-
-    format('DBG A\n'),
-
-    % invoke code analysis to collect all the variables from the head-argument . use that to generate List__varnamesOfArguments
-    % TODO MID : implement code analysis to collect all the variables from the head-argument . use that to generate List__varnamesOfArguments
-    %List__varnamesOfArguments = ['a', 'b'], % HACK
-    Int__nArgs = 2, % HACK
-	
-    % build the string of the arguments  based on Int__nArgs
-    helperForAst__genArgumentsForInvocationOfPredicate('VArg', List__varnamesOfArguments,  Int__nArgs),
-    listStrJoinComma(List__varnamesOfArguments, Str__srcProlog__predicateArgs), % join list of variable names to string
     
-    format('DBG B\n'),
 
-    count(List__varnamesOfArguments,   Int__countOfArguments),
+	
+    % build the string of the arguments
+    zipListStrWithPrefix(Set__Str__headVariables, 'Varg__',   Set__Str__headVariablesWithPrefix),
+    listStrJoinComma(Set__Str__headVariablesWithPrefix, Str__srcProlog__predicateArgs), % join list of variable names to string
+    
+
+    count(Set__Str__headVariablesWithPrefix,   Int__countOfArguments),
     ( Int__countOfArguments > 0 -> Str__srcProlog__predicateArgsComma = ',' ; Str__srcProlog__predicateArgsComma = '' ),
     
 
-    format('DBG C\n'),
 
     
     strFormat('pred__(runtimeCtx(), runtimeCtx(), ~w, [],   Res) :-\n', [Str__srcProlog__headArgument],   Str__srcProlog__head),
@@ -908,12 +922,19 @@ convAstExprToTargetProlog(Str, _,    Str__srcProlog) :-
 
 
 
+ast__collectVarNames__helperForList([], Set,   Set).
+ast__collectVarNames__helperForList([Head|Tail], Set__in,   Set__out) :-
+    ast__collectVarNames__helperForList(Tail, Set__in,   Set__0),
+    ast__collectVarNames(Head, Set__0,   Set__out).
 
+% collect names of variables
+ast__collectVarNames(decoratedMettaExpr(_, List__AstNode__children), Set__in,   Set__out) :-
+    ast__collectVarNames__helperForList(List__AstNode__children, Set__in,   Set__out).
 
+ast__collectVarNames(var(Str__name), Set__in,   Set__out) :-
+    set_put(Str__name, Set__in,   Set__out).
 
-
-
-
+ast__collectVarNames(_, Set,   Set). % default fallback for all other stuff in the tree
 
 
 

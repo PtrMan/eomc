@@ -27,6 +27,9 @@ expr(boolean(false)) --> [word('false')].
 %expr(number_(Val)) --> [Str], {atom_number(Str, Val)}.
 expr(number_(Val)) --> [number(Val)].
 
+expr(var(Name)) --> [punct($), word(Name)].
+
+
 expr(X) --> brace2(X).
 
 braceContent(braceContent()) --> [punct(')')].
@@ -129,6 +132,8 @@ convParseTreeToAst(parsedBrace2([literal('/')|List]),   astNode('/', List__ast))
 convParseTreeToAst(literal(Str),   Str).
 
 convParseTreeToAst(number_(Int),   Int).
+
+convParseTreeToAst(var(Name),   var(Name)).
 
 convParseTreeToAst(mettaFunctionDefinition(ParseTree__Head, ParseTree__Body),   mettaFunctionDefinition(Ast__Head, Ast__Body)) :-
     convParseTreeToAst(ParseTree__Head,   Ast__Head),
