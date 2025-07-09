@@ -25,7 +25,7 @@ entryCompiler :-
     nl,
 
     % * parse MeTTa
-    parserForMetta(Str__srcMetta,   Ast__result),
+    parserForMetta(Str__srcMetta,   Ast__root),
 
 
     % * generate code with the prolog backend
@@ -35,24 +35,18 @@ entryCompiler :-
     % MettaFunctionDef0 = mettaFunctionDefinition('exampleFunctionA', 2, Ast__result),
 
     % HACKY : for now we assume only one function declaration in the metta code
-    functionDeclaration(Ast__head, Ast__body) = Ast__result,
-    MettaFunctionDef0 = mettaFunctionDefinition('exampleFunctionA', 2, Ast__body),
-    
+    Ast__functionDeclaration = Ast__root,
+
     
     Ctx0 = ctx(0),
     
     
-    % args of the entry predicate
-    List__EntryPredicateArgs = ['A', 'B'],
+ 
+
+    emitPrologFunctionOfMettaFunctionDefinition(Ast__functionDeclaration, Ctx0, Ctx1, Str__SrcProlog__generated, Int__PredicateIdRes),
     
 
-    emitPrologFunctionOfMettaFunctionDefinition(MettaFunctionDef0, Ctx0, Ctx1, List__EntryPredicateArgs, Str__SrcProlog__generated, Int__PredicateIdRes),
-    
-    nl,
-    nl,
-    nl,
-    print(Str__SrcProlog__generated),
-    nl,
+    format('\n\n\n~w\n', [Str__SrcProlog__generated]),
 
 
     Str__pathToPrologRuntimeSrc = './src/runtime/runtimeProlog.prolog',

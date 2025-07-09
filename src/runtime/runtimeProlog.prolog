@@ -1,26 +1,26 @@
 
-pred__+(runtimeCtx(), runtimeCtx(), A, B, Res) :-
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['+', A, B]), _, Res) :-
     Res is A + B.
-pred__-(runtimeCtx(), runtimeCtx(), A, B, Res) :-
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['-', A, B]), _, Res) :-
     Res is A - B.
-pred__*(runtimeCtx(), runtimeCtx(), A, B, Res) :-
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['*', A, B]), _, Res) :-
     Res is A * B.
-pred__/(runtimeCtx(), runtimeCtx(), A, B, Res) :-
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['/', A, B]), _, Res) :-
     Res is A / B.
 
-pred__gt(A, B, Z) :-
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['>', A, B]), _, Res) :-
     (   A > B
     ->  Z = true
     ;   Z = false
     ).
 
-pred__lt(A, B, Z) :-
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['<', A, B]), _, Res) :-
     (   A < B
     ->  Z = true
     ;   Z = false
     ).
 
-pred__eq(A, B, Z) :-
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['==', A, B]), _, Res) :-
     (   A == B
     ->  Z = true
     ;   Z = false

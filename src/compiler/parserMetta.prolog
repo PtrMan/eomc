@@ -38,7 +38,7 @@ brace2(parsedBrace(X)) --> [punct('(')],  braceContent(X).
 
 
 
-functionDeclaration(functionDeclaration(Head, Body)) -->
+functionDeclaration(mettaFunctionDefinition(Head, Body)) -->
     [punct('('), punct('=')], 
     brace2(Head),
     brace2(Body),
@@ -62,7 +62,7 @@ foldBrace(braceContent(H,T),   [FoldedHead|List__tail]) :-
 fold(parsedBrace(X),   parsedBrace2(FoldedContent)) :-
     foldBrace(X,  FoldedContent).
 
-fold(functionDeclaration(ParseTree__InputHead, ParseTree__InputBody),   functionDeclaration(ParseTree__ResultHead, ParseTree__ResultBody)) :-
+fold(mettaFunctionDefinition(ParseTree__InputHead, ParseTree__InputBody),   mettaFunctionDefinition(ParseTree__ResultHead, ParseTree__ResultBody)) :-
     fold(ParseTree__InputHead,   ParseTree__ResultHead),
     fold(ParseTree__InputBody,   ParseTree__ResultBody).
 
@@ -104,12 +104,15 @@ convParseTreeToAst__braceHelper([H|T],   [Ast__head|List__ast__tail]) :-
 
 % convert parsing tree to AST
 convParseTreeToAst(parsedBrace2([]),   decoratedMettaExpr(nil, [])).
-convParseTreeToAst(parsedBrace2([literal('if')|List]),   decoratedMettaExpr(cond, List__ast)) :-
-    convParseTreeToAst__braceHelper(List,  List__ast).
-convParseTreeToAst(parsedBrace2([literal(Atom)|List]),   decoratedMettaExpr(invokeFunction(Str), List__ast)) :-
-    atom_string(Atom, Str), % convert atom to string!
+%%%convParseTreeToAst(parsedBrace2([literal('if')|List]),   decoratedMettaExpr(cond, List__ast)) :-
+%%%    convParseTreeToAst__braceHelper(List,  List__ast).
+%%%convParseTreeToAst(parsedBrace2([literal(Atom)|List]),   decoratedMettaExpr(invokeFunction(Str), List__ast)) :-
+%%%    atom_string(Atom, Str), % convert atom to string!
+%%%
+%%%    convParseTreeToAst__braceHelper(List,  List__ast).
+convParseTreeToAst(parsedBrace2(List__parseTree),   decoratedMettaExpr(nil, List__ast)) :-
+    convParseTreeToAst__braceHelper(List__parseTree,  List__ast).
 
-    convParseTreeToAst__braceHelper(List,  List__ast).
 
 /*
 % HACKY to allow calling of built in algebra (for now)
@@ -123,9 +126,11 @@ convParseTreeToAst(parsedBrace2([literal('/')|List]),   astNode('/', List__ast))
     convParseTreeToAst__braceHelper(List,  List__ast).
  */
 
+convParseTreeToAst(literal(Str),   Str).
+
 convParseTreeToAst(number_(Int),   Int).
 
-convParseTreeToAst(functionDeclaration(ParseTree__Head, ParseTree__Body),   functionDeclaration(Ast__Head, Ast__Body)) :-
+convParseTreeToAst(mettaFunctionDefinition(ParseTree__Head, ParseTree__Body),   mettaFunctionDefinition(Ast__Head, Ast__Body)) :-
     convParseTreeToAst(ParseTree__Head,   Ast__Head),
     convParseTreeToAst(ParseTree__Body,   Ast__Body).
 

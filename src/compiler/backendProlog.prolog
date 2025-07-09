@@ -387,7 +387,7 @@ extractCallsitesAndPredicateCodeFromListOfPredicateSiteInfo([tuplePredicateSiteI
 % astNode(invokeFunction, <NAME>, <ARRAY OF AST-NODES OF ARGUMENTS>)
 
 
-emitPrologFunctionForAst__Recursive(decoratedMettaExpr(invokeFunction(Str__nameOfFunction),Arr__astNodesOfArguments), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
+emitPrologFunctionForAst__Recursive(decoratedMettaExpr(invokeFunction(Str__nameOfFunction),[_|Arr__astNodesOfArguments]), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
 	
     allocatePredicate(PredIdCounterIn, PredIdCounter1, List__EntryPredicateArgs,   Int__PredicateIdRes, Str__srcProlog__predicateHead), % allocate new predicate, generate head of predicate
     
@@ -487,7 +487,7 @@ genPredicateInvocation(AstNode__body, Str__varnameOfResult,  ctx(PredIdCounterIn
 
 
 % conditional
-emitPrologFunctionForAst__Recursive(decoratedMettaExpr(cond,[AstNode__Cond, AstNode__TrueCodepath, AstNode__FalseCodepath]), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
+emitPrologFunctionForAst__Recursive(decoratedMettaExpr(cond,['if', AstNode__Cond, AstNode__TrueCodepath, AstNode__FalseCodepath]), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
 
 	allocatePredicate(PredIdCounterIn, PredIdCounter1, List__EntryPredicateArgs,   Int__PredicateIdRes, Str__srcProlog__predicateHead), % allocate new predicate, generate head of predicate
     
@@ -550,7 +550,7 @@ emitPrologFunctionForAst__Recursive(decoratedMettaExpr(cond,[AstNode__Cond, AstN
     
     % now we generate code for the "real" predicate. This predicate calls into the generated helper predicate after computing the value of the AstNode__Cond AST-node
     
-    strFormat(' pred~w(runtimeCtx(), runtimeCtx(), ~w, CondEvalResult), % evalulate value of condition\n', [Int__predicateId__condition, Str__srcProlog__predicateArgs],   Str__srcProlog__evalValueOfCondition),
+    strFormat(' pred~w(runtimeCtx(), runtimeCtx(), ~w, CondEvalResult), % evaluate value of condition\n', [Int__predicateId__condition, Str__srcProlog__predicateArgs],   Str__srcProlog__evalValueOfCondition),
     strFormat(' pred~w(CondEvalResult, runtimeCtx(), runtimeCtx(), ~w),\n', [Int__PredicateIdRes, Str__srcProlog__predicateArgs],   Str__srcProlog__invokeConditionalHelperPredicate),
     strConcat([Str__srcProlog__evalValueOfCondition, Str__srcProlog__invokeConditionalHelperPredicate, ' true.\n'],   Str__srcProlog__predicateBody),
     
@@ -620,21 +620,54 @@ helperForAst__genArgumentsForInvocationOfPredicate(Str__prefix, List,  Int__n) :
 
 
 
+% HALFDONE::: TODO HIGH : implement codeanalysis__decorateWithStatic() which decorates AST-nodes with the statically known controlflow type 
 
+% /param AstNode__headArgument   is the AST-node of the head of the MeTTa function definition as a decoratedMettaExpr(<DECORATION>, <CONTENT>)
+emitPrologFunctionOfMettaFunctionDefinition(mettaFunctionDefinition(AstNode__headArgument, AstNode__body__in), ctx(PredIdCounterIn), ctx(PredIdCounterOut), Str__SrcProlog__dest, Int__PredicateIdRes) :-
 
+    %format('DBG  AstNode__body__in=\n'),
+    %format('~w\n', [AstNode__body__in]),
 
-emitPrologFunctionOfMettaFunctionDefinition(mettaFunctionDefinition(Str__functionname, Int__nArgs, AstNodeBody), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Str__SrcProlog__dest, Int__PredicateIdRes) :-
-	emitPrologFunctionForAst__Recursive(AstNodeBody, ctx(PredIdCounterIn), ctx(PredIdCounter1), List__EntryPredicateArgs, Str__SrcProlog__ofPredicates, Int__PredicateIdCalled),
+    % decorate AST-nodes with the statically known controlflow type of nodes
+    codeanalysis__decorateWithStatic(AstNode__body__in,   AstNode__decoratedBody),
+    !, % we only care about one tree!
+
+    %format('DBG  AstNode__decoratedBody=\n'),
+    %format('~w\n', [AstNode__decoratedBody]),
+
+    % convert the head-argument to the Prolog source, which represents the head. Idea here is to leave the heavy lifting for unification to the prolog runtime of the prolog target
+    convAstExprToTargetProlog(AstNode__headArgument, 'Varg__',    Str__srcProlog__headArgument),
+
+    format('DBG ~w\n', Str__srcProlog__headArgument),
+
+    format('DBG  emit code for decorated body...\n'),
+
+    % HACK HACK
+    List__EntryPredicateArgs = ['a', 'b'],
+
+	emitPrologFunctionForAst__Recursive(AstNode__decoratedBody, ctx(PredIdCounterIn), ctx(PredIdCounter1), List__EntryPredicateArgs, Str__SrcProlog__ofPredicates, Int__PredicateIdCalled),
+
+    format('DBG A\n'),
+
+    % invoke code analysis to collect all the variables from the head-argument . use that to generate List__varnamesOfArguments
+    % TODO MID : implement code analysis to collect all the variables from the head-argument . use that to generate List__varnamesOfArguments
+    %List__varnamesOfArguments = ['a', 'b'], % HACK
+    Int__nArgs = 2, % HACK
 	
     % build the string of the arguments  based on Int__nArgs
     helperForAst__genArgumentsForInvocationOfPredicate('VArg', List__varnamesOfArguments,  Int__nArgs),
     listStrJoinComma(List__varnamesOfArguments, Str__srcProlog__predicateArgs), % join list of variable names to string
     
+    format('DBG B\n'),
+
     count(List__varnamesOfArguments,   Int__countOfArguments),
     ( Int__countOfArguments > 0 -> Str__srcProlog__predicateArgsComma = ',' ; Str__srcProlog__predicateArgsComma = '' ),
     
+
+    format('DBG C\n'),
+
     
-    strFormat('pred__~w(runtimeCtx(), runtimeCtx() ~w~w,  Res) :-\n', [Str__functionname, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs],   Str__srcProlog__head),
+    strFormat('pred__(runtimeCtx(), runtimeCtx(), ~w, [],   Res) :-\n', [Str__srcProlog__headArgument],   Str__srcProlog__head),
     
     % TODO : also take string with let variables into account (which are not bound in the callsite to values, because they are bound in the called let predicate(s))
     strFormat(' pred~w(runtimeCtx(), runtimeCtx() ~w~w,  Res), % invoke predicate which implements body of function written in metta\n', [Int__PredicateIdCalled, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs],   Str__srcProlog__invokeBodyPredicate),
@@ -775,34 +808,71 @@ true.
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%
+% AST analysis
 
 
 
-% TODO : overhaul to use the new decoratedMettaExpr and emits mettaExpr(<LIST>)
+codeanalysis__decorateWithStatic__helperForList([],   []).
+codeanalysis__decorateWithStatic__helperForList([Head__in|Tail__in],   [Head__out|Tail__out]) :-
+    codeanalysis__decorateWithStatic__helperForList(Tail__in,   Tail__out),
+    codeanalysis__decorateWithStatic(Head__in,   Head__out).
 
 
-% helper to convert list of AST-expression to list of strings of prolog target code
-convAstExprToTargetProlog__helper__convList([], []).
-convAstExprToTargetProlog__helper__convList([AstExpr], [Str__srcProlog]) :-
-    convAstExprToTargetProlog(AstExpr,   Str__srcProlog).
-convAstExprToTargetProlog__helper__convList([AstExpr|List__astTail], [Str__srcProlog|List__str__srcProlog]) :-
-    convAstExprToTargetProlog__helper__convList(List__astTail, List__str__srcProlog),
-    convAstExprToTargetProlog(AstExpr,   Str__srcProlog).
+% codeanalysis__decorateWithStatic() decorates AST-nodes with the statically known controlflow type
+% does NOT check for semantic correctness!
 
-% convert a AST-expression to prolog target
-convAstExprToTargetProlog(astExpr(Val),   Str__srcProlog) :-
-    number(Val), % Val must be a number
-    strFormat('~w', [Val],   Str__srcProlog).
+codeanalysis__decorateWithStatic(Number,   Number) :-
+    number(Number).
+codeanalysis__decorateWithStatic(Str,   Str) :-
+    atom(Str), % Str must be a string.
 
-% convert a AST-expression to prolog target
-convAstExprToTargetProlog(astExpr(Str),   Str__srcProlog) :-
-    checkIsString(Str), % Val must be a string
-    strFormat('\'~w\'', [Str],   Str__srcProlog).
+    true.
 
-% convert a AST-expression to prolog target
-convAstExprToTargetProlog(astExpr(List__inner),   Str__srcProlog) :-
+
+codeanalysis__decorateWithStatic(decoratedMettaExpr(nil, ['if', AstNode__in__cond, AstNode__in__TrueCodepath, AstNode__in__FalseCodepath]),   decoratedMettaExpr(cond, ['if', AstNode__out__cond, AstNode__out__TrueCodepath, AstNode__out__FalseCodepath])) :-
+    codeanalysis__decorateWithStatic(AstNode__in__cond,   AstNode__out__cond),
+    codeanalysis__decorateWithStatic(AstNode__in__TrueCodepath,   AstNode__out__TrueCodepath),
+    codeanalysis__decorateWithStatic(AstNode__in__FalseCodepath,   AstNode__out__FalseCodepath).
+
+
+codeanalysis__decorateWithStatic(decoratedMettaExpr(nil, [Str__functionname|List__AstNode__in__arguments]),   decoratedMettaExpr(invokeFunction(Str__functionname), [Str__functionname|List__AstNode__out__arguments])) :-
     
-    convAstExprToTargetProlog__helper__convList(List__inner, List__str__srcPrologInner),
+    atom(Str__functionname), % must be string
+    % TODO : refactor code so we are really using strings instead of atoms!
+
+    codeanalysis__decorateWithStatic__helperForList(List__AstNode__in__arguments,   List__AstNode__out__arguments).
+
+
+
+% else we fallback to simple recusion without decorating anything
+codeanalysis__decorateWithStatic(decoratedMettaExpr(nil, List__in),   decoratedMettaExpr(nil, List__out)) :-
+    codeanalysis__decorateWithStatic__helperForList(List__in,   List__out).
+
+
+
+
+
+
+
+
+
+
+
+
+%  emits mettaExpr(<LIST>)
+% helper to convert list of AST-expression to list of strings of prolog target code
+convAstExprToTargetProlog__helper__convList([], _,   []).
+%%convAstExprToTargetProlog__helper__convList([AstExpr], [Str__srcProlog]) :-
+%%    convAstExprToTargetProlog(AstExpr,   Str__srcProlog).
+convAstExprToTargetProlog__helper__convList([AstExpr|List__astTail], Str__variablePrefix,   [Str__srcProlog|List__str__srcProlog]) :-
+    convAstExprToTargetProlog__helper__convList(List__astTail, Str__variablePrefix,   List__str__srcProlog),
+    convAstExprToTargetProlog(AstExpr, Str__variablePrefix,   Str__srcProlog).
+
+% convert a AST-expression to prolog target
+convAstExprToTargetProlog(decoratedMettaExpr(_, List__inner), Str__variablePrefix,   Str__srcProlog) :-
+    
+    convAstExprToTargetProlog__helper__convList(List__inner, Str__variablePrefix,   List__str__srcPrologInner),
     listStrJoin(List__str__srcPrologInner, ',',   Str__strProlog__inner),
     
     strFormat('mettaExpr([~w])', [Str__strProlog__inner],   Str__srcProlog),
@@ -811,8 +881,25 @@ convAstExprToTargetProlog(astExpr(List__inner),   Str__srcProlog) :-
     
     true.
 
+
+% convert a AST-expression to prolog target
+% Str__variablePrefix is the prefix for used variable-names
+convAstExprToTargetProlog(var(Str__name), Str__variablePrefix,   Str__srcProlog) :-
+    strFormat('~w~w', [Str__variablePrefix, Str__name],   Str__srcProlog).
+
+% convert a AST-expression to prolog target
+convAstExprToTargetProlog(Val, _,    Str__srcProlog) :-
+    number(Val), % Val must be a number
+    strFormat('~w', [Val],   Str__srcProlog).
+
+% convert a AST-expression to prolog target
+convAstExprToTargetProlog(Str, _,    Str__srcProlog) :-
+    checkIsString(Str), % Val must be a string
+    strFormat('\'~w\'', [Str],   Str__srcProlog).
+
+
 % manual test
-%    convAstExprToTargetProlog(astExpr([astExpr('a'), astExpr(5)]),   Str).
+%    ?- convAstExprToTargetProlog(decoratedMettaExpr(nil, ['a', 5, var('B')]), 'Varg__',    Str).
 
 
 
