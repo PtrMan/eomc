@@ -72,7 +72,7 @@ convArgsToPrologVarNames([H|T], [H2|T2]) :-
 
 
 
-
+/* commented because not used
 
 % [0]  MeTTa function name
 % [1]  Prolog predicate
@@ -102,7 +102,7 @@ retPrologSrc(astNode(Str__mettaFnName,[_]), Str__Dest, [Str__Src0], Str__OutSrcP
     format(string(Str__OutSrcProlog), '~w is ~w(~w)', [Str__Dest, Str__PrologSrcFnName, Str__Src0]).
 
 
-
+ */
 
 
 
