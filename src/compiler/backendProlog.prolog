@@ -325,32 +325,39 @@ emitPrologFunctionForAst__Recursive(Val, ctx(PredIdCounterIn), ctx(PredIdCounter
 
 
 % FIXME MID : needs to get overhauled to the new AST-representation
-emitPrologFunctionForAst__Recursive(astNode(retrieveValueByName, Str__Name), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,   Str__SrcProlog__dest, Int__PredicateIdRes) :-
+emitPrologFunctionForAst__Recursive(var(Str__Name), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,   Str__SrcProlog__dest, Int__PredicateIdRes) :-
 	
+    % build the string of let variables
+    zipListStrWithPrefix(Set__Str__letVariableNames, 'VLet__',   Set__Str__letVariablesWithPrefix),
+    listStrJoinComma(Set__Str__letVariablesWithPrefix,   Str__srcProlog__letVariables), % join list of variable names to string
+
     Int__PredicateIdRes is PredIdCounterIn, % assign id of generated prolog predicate
     PredIdCounterOut is PredIdCounterIn + 1,
     
-    
     convArgsToPrologVarNames(List__EntryPredicateArgs, List__EntryPredicateArgsAsPrologSrc),
-    
+
     % concat
 	listStrJoinComma(List__EntryPredicateArgsAsPrologSrc, Str__SrcProlog__Args),
+
+
     
-    
-    
-    % TODO : check from where the variable is taken ( MeTTa function declaration arguments, or let inside the function )
-    convArgToPrologVarName(Str__Name, Str__SrcProlog__SrcVar),
-    
+    % check from where the variable is taken ( MeTTa function declaration arguments, or let inside the function )
+    set_contains(Set__Str__letVariableNames, Str__Name,   Bool__isLetVariable),
+    !,
+    ( Bool__isLetVariable
+    ->  Str__varPrefix = "VLet__"
+    ;   Str__varPrefix = "VArg__"
+    ),
+    strConcat([Str__varPrefix, Str__Name],   Str__SrcProlog__SrcVar),
+
+
     
     % we have to emit the leading Prolog predicate head
-    format(string(Str__predicateHead), 'pred~w(runtimeCtx(), runtimeCtx(), ~w, Res) :-~n', [Int__PredicateIdRes, Str__SrcProlog__Args]),
+    strFormat("pred~w(runtimeCtx(), runtimeCtx(), ~w, [~w], Res) :-~n", [Int__PredicateIdRes, Str__SrcProlog__Args, Str__srcProlog__letVariables],   Str__predicateHead),
     
-    format(string(Str__0), '   Res = ~w,~n', [Str__SrcProlog__SrcVar]),
+    strFormat(" Res = ~w.~n", [Str__SrcProlog__SrcVar],   Str__0),    
     
-    format(string(Str__predicateEnd), '   true.~n', []),
-    
-    
-    strConcat([Str__predicateHead, Str__0, Str__predicateEnd], Str__SrcProlog__dest),
+    strConcat([Str__predicateHead, Str__0], Str__SrcProlog__dest),
     
     true.
 
