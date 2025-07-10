@@ -34,28 +34,28 @@ source code is assumed to contain only one function declaration. Only integers a
 
 * compiler: there is virtually no semantics checking. The code has to be sematically correct so that the compiler produces correct output.
 * runtime: there is virtually no stdlib implemented.
-* only the simplistic bare minimal features of the language are supported for now. That means no `let`, no `match` etc.
+* only the simplistic bare minimal features of the language are supported for now. That means no `match` etc.
 
 #### support table of compiler+libraries
 
 | feature | parser | backend |
 | :--- | :--- | :--- |
-| datatype:boolean | yes | no |
+| datatype:boolean | yes | yes |
 | datatype:int | yes | yes |
 | datatype:float | yes | yes |
 | function declaration | partial(one) | partial(one) |
 | function invocation | yes | yes |
-| variable definition/usage | yes | (yes) |
+| variable definition/usage | yes | yes |
 | control flow: conditionals | yes | yes |
 | control flow: sequential | no | no |
-| data flow: let | no | (yes) |
+| data flow: let | yes | yes |
 | datastructure declaration | no | no |
 | datastructure unification | - | no |
 
 | feature | parser | runtime |
 | :--- | :--- | :--- |
 | basic math (+, *, etc.) | - | yes |
-| basic math (cos, etc.) | - | no |
+| basic math (cos, etc.) | - | (yes) |
 | comparison | - | yes |
 | match function | - | no |
 | call into python | - | no |
