@@ -418,7 +418,7 @@ extractCallsitesAndPredicateCodeFromListOfPredicateSiteInfo([tuplePredicateSiteI
 
 emitPrologFunctionForAst__Recursive(decoratedMettaExpr(invokeFunction(Str__nameOfFunction),[_|Arr__astNodesOfArguments]), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,   Str__SrcProlog__dest, Int__PredicateIdRes) :-
 	
-    allocatePredicate(PredIdCounterIn, PredIdCounter1, List__EntryPredicateArgs,   Int__PredicateIdRes, Str__srcProlog__predicateHead), % allocate new predicate, generate head of predicate
+    allocatePredicate(PredIdCounterIn, PredIdCounter1, List__EntryPredicateArgs, Set__Str__letVariableNames,  Int__PredicateIdRes, Str__srcProlog__predicateHead), % allocate new predicate, generate head of predicate
     
     
     
@@ -516,11 +516,16 @@ genPredicateInvocation(AstNode__body, Str__varnameOfResult,  ctx(PredIdCounterIn
 % conditional
 emitPrologFunctionForAst__Recursive(decoratedMettaExpr(cond,['if', AstNode__Cond, AstNode__TrueCodepath, AstNode__FalseCodepath]), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,    Str__SrcProlog__dest, Int__PredicateIdRes) :-
 
-	allocatePredicate(PredIdCounterIn, PredIdCounter1, List__EntryPredicateArgs,   Int__PredicateIdRes, Str__srcProlog__predicateHead), % allocate new predicate, generate head of predicate
+    % build the string and stuff of let variables
+    zipListStrWithPrefix(Set__Str__letVariableNames, 'Vlet__',   Set__Str__letVariablesWithPrefix),
+    listStrJoinComma(Set__Str__letVariablesWithPrefix,   Str__srcProlog__letVariables), % join list of variable names to string
+
+
+	allocatePredicate(PredIdCounterIn, PredIdCounter1, List__EntryPredicateArgs, Set__Str__letVariableNames,   Int__PredicateIdRes, Str__srcProlog__predicateHead), % allocate new predicate, generate head of predicate
     
     
     % allocate a predicate for the helper
-    allocatePredicate(PredIdCounter1, PredIdCounter2, _,   Int__predicateId__predicateOfHelper, _), % allocate new predicate, generate head of predicate
+    allocatePredicate(PredIdCounter1, PredIdCounter2, _, Set__Str__letVariableNames,   Int__predicateId__predicateOfHelper, _), % allocate new predicate, generate head of predicate
     
     
     
@@ -556,14 +561,14 @@ emitPrologFunctionForAst__Recursive(decoratedMettaExpr(cond,['if', AstNode__Cond
     %%%Int__predicateId__trueCodepath = 5,
     %%%Int__predicateId__falseCodepath = 3,
     
-    strFormat('pred~w(true, runtimeCtx(), runtimeCtx(), ~w) :-\n', [Int__predicateId__predicateOfHelper, Str__srcProlog__predicateArgs], Str__srcProlog__helperTrueCodepath),
+    strFormat('pred~w(true, runtimeCtx(), runtimeCtx(), ~w, [~w], Res) :-\n', [Int__predicateId__predicateOfHelper, Str__srcProlog__predicateArgs, Str__srcProlog__letVariables], Str__srcProlog__helperTrueCodepath),
     
-    strFormat(' pred~w(runtimeCtx(), runtimeCtx(), ~w), % invoke predicate of codepath of true\n true.\n', [Int__predicateId__trueCodepath, Str__srcProlog__predicateArgs], Str__srcProlog__predicatebodyForTrueCodepath),
+    strFormat(' pred~w(runtimeCtx(), runtimeCtx(), ~w, [~w], Res), % invoke predicate of codepath of true\n true.\n', [Int__predicateId__trueCodepath, Str__srcProlog__predicateArgs, Str__srcProlog__letVariables], Str__srcProlog__predicatebodyForTrueCodepath),
 	
     
-    strFormat('pred~w(false, runtimeCtx(), runtimeCtx(), ~w) :-\n', [Int__predicateId__predicateOfHelper, Str__srcProlog__predicateArgs], Str__srcProlog__helperFalseCodepath),
+    strFormat('pred~w(false, runtimeCtx(), runtimeCtx(), ~w, [~w], Res) :-\n', [Int__predicateId__predicateOfHelper, Str__srcProlog__predicateArgs, Str__srcProlog__letVariables], Str__srcProlog__helperFalseCodepath),
 	
-    strFormat(' pred~w(runtimeCtx(), runtimeCtx(), ~w), % invoke predicate of codepath of false\n true.\n', [Int__predicateId__falseCodepath, Str__srcProlog__predicateArgs], Str__srcProlog__predicatebodyForFalseCodepath),
+    strFormat(' pred~w(runtimeCtx(), runtimeCtx(), ~w, [~w], Res), % invoke predicate of codepath of false\n true.\n', [Int__predicateId__falseCodepath, Str__srcProlog__predicateArgs, Str__srcProlog__letVariables], Str__srcProlog__predicatebodyForFalseCodepath),
     
     
     
@@ -577,8 +582,8 @@ emitPrologFunctionForAst__Recursive(decoratedMettaExpr(cond,['if', AstNode__Cond
     
     % now we generate code for the "real" predicate. This predicate calls into the generated helper predicate after computing the value of the AstNode__Cond AST-node
     
-    strFormat(' pred~w(runtimeCtx(), runtimeCtx(), ~w, CondEvalResult), % evaluate value of condition\n', [Int__predicateId__condition, Str__srcProlog__predicateArgs],   Str__srcProlog__evalValueOfCondition),
-    strFormat(' pred~w(CondEvalResult, runtimeCtx(), runtimeCtx(), ~w),\n', [Int__PredicateIdRes, Str__srcProlog__predicateArgs],   Str__srcProlog__invokeConditionalHelperPredicate),
+    strFormat(' pred~w(runtimeCtx(), runtimeCtx(), ~w, [~w], CondEvalResult), % evaluate value of condition\n', [Int__predicateId__condition, Str__srcProlog__predicateArgs, Str__srcProlog__letVariables],   Str__srcProlog__evalValueOfCondition),
+    strFormat(' pred~w(CondEvalResult, runtimeCtx(), runtimeCtx(), ~w, [~w], Res),\n', [Int__predicateId__predicateOfHelper, Str__srcProlog__predicateArgs, Str__srcProlog__letVariables],   Str__srcProlog__invokeConditionalHelperPredicate),
     strConcat([Str__srcProlog__evalValueOfCondition, Str__srcProlog__invokeConditionalHelperPredicate, ' true.\n'],   Str__srcProlog__predicateBody),
     
     
@@ -598,7 +603,7 @@ emitPrologFunctionForAst__Recursive(decoratedMettaExpr(cond,['if', AstNode__Cond
 
 
 % allocates a new predicate for the prolog target  and also does some other stuff
-allocatePredicate(PredIdCounterIn, PredIdCounterOut, List__EntryPredicateArgs,   Int__PredicateIdRes, Str__srcProlog__predicateHead) :-
+allocatePredicate(PredIdCounterIn, PredIdCounterOut, List__EntryPredicateArgs, Set__Str__letVariableNames,     Int__PredicateIdRes, Str__srcProlog__predicateHead) :-
 	
     Int__PredicateIdRes is PredIdCounterIn, % assign id of generated prolog predicate
     PredIdCounterOut is PredIdCounterIn + 1,
@@ -606,12 +611,18 @@ allocatePredicate(PredIdCounterIn, PredIdCounterOut, List__EntryPredicateArgs,  
     
     convArgsToPrologVarNames(List__EntryPredicateArgs, List__EntryPredicateArgsAsPrologSrc),
     
+    % build the string and stuff of let variables
+    zipListStrWithPrefix(Set__Str__letVariableNames, 'Vlet__',   Set__Str__letVariablesWithPrefix),
+    listStrJoinComma(Set__Str__letVariablesWithPrefix, Str__srcProlog__letVariables), % join list of variable names to string
+
+    strFormat("[~w]", [Str__srcProlog__letVariables], Str__srcProlog__let),
+
     % concat
 	listStrJoinComma(List__EntryPredicateArgsAsPrologSrc, Str__SrcProlog__Args),
     
     
     % generate prolog code of head of predicate
-    genPrologSrcPredicateHead(Int__PredicateIdRes, Str__SrcProlog__Args, 'Res',   Str__generatedPredicate),
+    genPrologSrcPredicateHead(Int__PredicateIdRes, Str__SrcProlog__Args, Str__srcProlog__let, 'Res',   Str__generatedPredicate),
     strFormat('~w :-\n', [Str__generatedPredicate], Str__srcProlog__predicateHead),
     
     
