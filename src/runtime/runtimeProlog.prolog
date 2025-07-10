@@ -41,6 +41,56 @@ pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['==', A, B]), _, Res) :-
 
 
 
+
+
+
+
+
+
+
+
+% return item at index
+listRetAtIdx([], 0,   nil).
+listRetAtIdx([Item|_], 0,   Item).
+
+listRetAtIdx([_|Tail], Int__Idx, Res) :-
+    Int__Idx2 is Int__Idx - 1,
+    listRetAtIdx(Tail, Int__Idx2, Res),
+    !.
+
+
+listRetFirst([],  nil).
+listRetFirst([Val|_],   Val).
+
+listRetCdr([],  nil).
+listRetCdr([_],  nil).
+listRetCdr([_|Val],   Val).
+
+
+
+
+
+% MeTTa standard library
+pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['index-atom', metaExpr(List), Int__Idx]), _,   Res) :-
+    listRetAtIdx(List, Int__Idx,   Res).
+
+
+% MeTTa stdlib
+pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['car-atom', metaExpr(List)]), _,   Res) :-
+    listRetFirst(List,   Res).
+
+% MeTTa stdlib
+pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['cdr-atom', metaExpr(List)]), _,   Res) :-
+    listRetCdr(List,   Res).
+
+
+
+
+
+
+
+
+
 % MeTTa superpose()
 pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['superpose', mettaExpr(List)]), _, Res) :-
     % superpose takes a expression in MeTTa and converts it nondeterministic dataflow.
