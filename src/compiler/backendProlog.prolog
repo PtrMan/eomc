@@ -2,7 +2,9 @@
 checkIsString(Object) :-
     forall(member(X, Object), number(X)).
 
-
+% see https://stackoverflow.com/questions/64976271/is-there-a-way-to-check-if-an-element-is-boolean-in-prolog
+checkBoolean(Val) :-
+    Val == true; Val == false.
 
 
 count([], 0).
@@ -292,8 +294,9 @@ emitPrologFunctionForAst__Recursive(astNode(Str__mettaFnName,[Arg0]), ctx(PredId
 */
 
 
+% emission of code for number const or boolean const
 emitPrologFunctionForAst__Recursive(Val, ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,   Str__SrcProlog__dest, PredIdCounterIn) :-
-    number(Val), % Val must be a number!
+    ( number(Val) ; checkBoolean(Val) ), % Val must be a number or boolean!
 
     %%%Int__PredicateIdRes = PredIdCounterIn, % assign id of generated prolog predicate
     PredIdCounterOut is PredIdCounterIn + 1,
@@ -302,15 +305,18 @@ emitPrologFunctionForAst__Recursive(Val, ctx(PredIdCounterIn), ctx(PredIdCounter
     convArgsToPrologVarNames(List__EntryPredicateArgs, List__EntryPredicateArgsAsPrologSrc),
     
     % concat
-	listStrJoinComma(List__EntryPredicateArgsAsPrologSrc, Str__SrcProlog__Args),
+	listStrJoinComma(List__EntryPredicateArgsAsPrologSrc,   Str__SrcProlog__Args),
     
     
     % we have to emit the leading Prolog predicate head
-    format(string(T0), 'pred~w(runtimeCtx(), runtimeCtx(), ~w, _,   Res) :-~n', [PredIdCounterIn, Str__SrcProlog__Args]),
+    strFormat("pred~w(runtimeCtx(), runtimeCtx(), ~w, _,   Res) :-~n", [PredIdCounterIn, Str__SrcProlog__Args],   T0),
     
-    format(string(T1), '   Res is ~w.~n', [Val]),
+    ( number(Val)
+    ->  strFormat("   Res is ~w.~n", [Val],   T1)
+    ;   strFormat("   Res = ~w.~n", [Val],   T1)
+    ),
     
-    strConcat([T0, T1], Str__SrcProlog__dest),
+    strConcat([T0, T1],   Str__SrcProlog__dest),
     
 	true.
 
@@ -516,6 +522,9 @@ genPredicateInvocation(AstNode__body, Str__varnameOfResult,  ctx(PredIdCounterIn
 % conditional
 emitPrologFunctionForAst__Recursive(decoratedMettaExpr(cond,['if', AstNode__Cond, AstNode__TrueCodepath, AstNode__FalseCodepath]), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,    Str__SrcProlog__dest, Int__PredicateIdRes) :-
 
+    % FIXME MID : rewrite generated prolog code to use built in condition support of prolog
+
+
     % build the string and stuff of let variables
     zipListStrWithPrefix(Set__Str__letVariableNames, 'Vlet__',   Set__Str__letVariablesWithPrefix),
     listStrJoinComma(Set__Str__letVariablesWithPrefix,   Str__srcProlog__letVariables), % join list of variable names to string
@@ -555,11 +564,6 @@ emitPrologFunctionForAst__Recursive(decoratedMettaExpr(cond,['if', AstNode__Cond
     %  pred3(runtimeCtx(), runtimeCtx(), VArg__x0), % invoke predicate of codepath of false
     %  true.
     
-    %%%Str__srcProlog__predicateArgs = 'TODO',
-    
-    %%%Int__predicateId__predicateOfHelper = 53,
-    %%%Int__predicateId__trueCodepath = 5,
-    %%%Int__predicateId__falseCodepath = 3,
     
     strFormat('pred~w(true, runtimeCtx(), runtimeCtx(), ~w, [~w], Res) :-\n', [Int__predicateId__predicateOfHelper, Str__srcProlog__predicateArgs, Str__srcProlog__letVariables], Str__srcProlog__helperTrueCodepath),
     
@@ -697,11 +701,11 @@ emitPrologFunctionOfMettaFunctionDefinition(
     format('DBG  MeTTa fn def:   letVariableNames=\n'),
     format('~w\n', [Set__Str__letVariableNames__1]),
 
-    % FIXME FIXME FIXME   use Set__Str__letVariableNames__1 for codegen of let variables
-
+    format("compile trace: MeTTa fn def: call into emission of code for body...\n"),
 
 	emitPrologFunctionForAst__Recursive(AstNode__decoratedBody, ctx(PredIdCounterIn), ctx(PredIdCounter1), Set__Str__headVariables, Set__Str__letVariableNames__1,   Str__SrcProlog__ofPredicates, Int__PredicateIdCalled),
 
+    format("compile trace: MeTTa fn def: ...done\n"),
     
 
 	
@@ -879,6 +883,8 @@ codeanalysis__decorateWithStatic__helperForList([Head__in|Tail__in],   [Head__ou
 
 codeanalysis__decorateWithStatic(Number,   Number) :-
     number(Number).
+codeanalysis__decorateWithStatic(Bool,   Bool) :-
+    checkBoolean(Bool).
 codeanalysis__decorateWithStatic(Str,   Str) :-
     atom(Str), % Str must be a string.
 
@@ -988,6 +994,11 @@ convAstExprToTargetProlog(var(Str__name), Str__variablePrefix,   Str__srcProlog)
 % convert a AST-expression to prolog target
 convAstExprToTargetProlog(Val, _,    Str__srcProlog) :-
     number(Val), % Val must be a number
+    strFormat('~w', [Val],   Str__srcProlog).
+
+% convert a AST-expression to prolog target
+convAstExprToTargetProlog(Val, _,    Str__srcProlog) :-
+    checkBoolean(Val), % Val must be a boolean
     strFormat('~w', [Val],   Str__srcProlog).
 
 % convert a AST-expression to prolog target
