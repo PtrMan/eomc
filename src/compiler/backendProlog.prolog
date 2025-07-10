@@ -139,6 +139,14 @@ convListOfVariablesAndPrefixToStringAndComma(List__varnames, Str__prefix,    Str
 
 emitHelper__letUniversal__genCodeForLetAssignment(Str__destVarname, AstNode__child, ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,     Str__SrcProlog__child,        Str__SrcProlog__letAssignment) :-
     
+    % build the string of let variables
+    zipListStrWithPrefix(Set__Str__letVariableNames, 'VLet__',   Set__Str__letVariablesWithPrefix),
+    listStrJoinComma(Set__Str__letVariablesWithPrefix,   Str__srcProlog__letVariables), % join list of variable names to string
+
+
+    strFormat("[~w]", [Str__srcProlog__letVariables],   Str__srcProlog__letVariablesAsList),
+
+
     % we need to generate the code of the predicate of the child AST-node
     emitPrologFunctionForAst__Recursive(AstNode__child, ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,   Str__SrcProlog__child, Int__PredicateIdChild),
     
@@ -151,7 +159,7 @@ emitHelper__letUniversal__genCodeForLetAssignment(Str__destVarname, AstNode__chi
     
     strFormat('VLet__~w', [Str__destVarname], Str__srcProlog__destVarname),
     
-    genPrologSrcPredicateHead(Int__PredicateIdChild, Str__SrcProlog__Args, 'List__Str__letAssignments', Str__srcProlog__destVarname,   Str__predicateToCall),
+    genPrologSrcPredicateHead(Int__PredicateIdChild, Str__SrcProlog__Args, Str__srcProlog__letVariablesAsList, Str__srcProlog__destVarname,   Str__predicateToCall),
     format(string(Str__SrcProlog__letAssignment), '    ~w, % invoke predicate to do computation of value of let assignment\n', [Str__predicateToCall]),
     
     true.
@@ -373,6 +381,14 @@ emitPrologFunctionForAst__Recursive(
     ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,   Str__SrcProlog__dest, Int__PredicateIdRes
 ) :-
 
+
+    % build the string of let variables
+    zipListStrWithPrefix(Set__Str__letVariableNames, 'VLet__',   Set__Str__letVariablesWithPrefix),
+    listStrJoinComma(Set__Str__letVariablesWithPrefix,   Str__srcProlog__letVariables), % join list of variable names to string
+
+    strFormat("[~w]", [Str__srcProlog__letVariables],   Str__srcProlog__letVariablesAsList),
+
+
     Int__PredicateIdRes is PredIdCounterIn, % assign id of generated prolog predicate
     PredIdCounter1 is PredIdCounterIn + 1,
     
@@ -394,7 +410,7 @@ emitPrologFunctionForAst__Recursive(
     print(Str__SrcProlog__letAssignments),nl,
 
     
-    genPrologSrcPredicateHead(Int__PredicateIdRes, Str__SrcProlog__Args, 'List__Str__letAssignments', 'Res',   Str__generatedPredicate),
+    genPrologSrcPredicateHead(Int__PredicateIdRes, Str__SrcProlog__Args, Str__srcProlog__letVariablesAsList, 'Res',   Str__generatedPredicate),
     strFormat('~w :-\n', [Str__generatedPredicate], Str__SrcProlog__predicateHead),
 
     
@@ -403,7 +419,7 @@ emitPrologFunctionForAst__Recursive(
     
     
     
-    genPrologSrcPredicateHead(Int__PredicateIdCalled, Str__SrcProlog__Args, 'List__Str__letAssignments', 'Res',   Str__srcProlog__predicateCalled),
+    genPrologSrcPredicateHead(Int__PredicateIdCalled, Str__SrcProlog__Args, Str__srcProlog__letVariablesAsList, 'Res',   Str__srcProlog__predicateCalled),
     strFormat('   ~w, % invoke child predicate\n', [Str__srcProlog__predicateCalled], Str__SrcProlog__callChildPredicate),
     
     
@@ -430,7 +446,12 @@ extractCallsitesAndPredicateCodeFromListOfPredicateSiteInfo([tuplePredicateSiteI
 
 
 emitPrologFunctionForAst__Recursive(decoratedMettaExpr(invokeFunction(Str__nameOfFunction),[_|Arr__astNodesOfArguments]), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,   Str__SrcProlog__dest, Int__PredicateIdRes) :-
-	
+
+    % build the string of let variables
+    zipListStrWithPrefix(Set__Str__letVariableNames, 'VLet__',   Set__Str__letVariablesWithPrefix),
+    listStrJoinComma(Set__Str__letVariablesWithPrefix,   Str__srcProlog__letVariables), % join list of variable names to string
+
+
     allocatePredicate(PredIdCounterIn, PredIdCounter1, List__EntryPredicateArgs, Set__Str__letVariableNames,  Int__PredicateIdRes, Str__srcProlog__predicateHead), % allocate new predicate, generate head of predicate
     
     
@@ -456,7 +477,7 @@ emitPrologFunctionForAst__Recursive(decoratedMettaExpr(invokeFunction(Str__nameO
     
 
 
-    strFormat(' pred__(runtimeCtx(), runtimeCtx(), mettaExpr([\'~w\',~w]), _, Res), % invoke predicate of AST-node invokeFunction\n', [Str__nameOfFunction, Str__srcProlog__predicateArgs], Str__srcProlog__invokePredicate) , % generate code to invoke the predicate
+    strFormat(' pred__(runtimeCtx(), runtimeCtx(), mettaExpr([\'~w\',~w]), [~w], Res), % invoke predicate of AST-node invokeFunction\n', [Str__nameOfFunction, Str__srcProlog__predicateArgs, Str__srcProlog__letVariables], Str__srcProlog__invokePredicate) , % generate code to invoke the predicate
     
     Str__srcProlog__predicateTail = ' true.\n',
     
@@ -497,6 +518,11 @@ genPredicateInvocations([AstNode__body|List__tail__astNodes], [Str__varnameOfRes
 % generate code for call to a predicate and of the body of the predicate itself
 genPredicateInvocation(AstNode__body, Str__varnameOfResult,  ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,      Tuple) :-
 
+    % build the string of let variables
+    zipListStrWithPrefix(Set__Str__letVariableNames, 'VLet__',   Set__Str__letVariablesWithPrefix),
+    listStrJoinComma(Set__Str__letVariablesWithPrefix,   Str__srcProlog__letVariables), % join list of variable names to string
+
+
     % generate prolog code for body of AST-node
     emitPrologFunctionForAst__Recursive(AstNode__body, ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,   Str__srcProlog__predicate, Int__PredicateIdRes2),
 
@@ -508,7 +534,7 @@ genPredicateInvocation(AstNode__body, Str__varnameOfResult,  ctx(PredIdCounterIn
 
 
     % generate prolog code for invocation-site
-    strFormat(' pred~w(runtimeCtx(), runtimeCtx() ~w~w, _,   ~w), % invoke predicate which implements body of argument\n', [Int__PredicateIdRes2, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs, Str__varnameOfResult],   Str__srcProlog__invocationSite),
+    strFormat(' pred~w(runtimeCtx(), runtimeCtx() ~w~w, [~w],   ~w), % invoke predicate which implements body of argument\n', [Int__PredicateIdRes2, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs, Str__srcProlog__letVariables, Str__varnameOfResult],   Str__srcProlog__invocationSite),
 
     Tuple = tuplePredicateSiteInfo(Str__srcProlog__predicate, Str__srcProlog__invocationSite, Int__PredicateIdRes2),
 
@@ -533,7 +559,7 @@ emitPrologFunctionForAst__Recursive(decoratedMettaExpr(cond,['if', AstNode__Cond
 
 
     % build the string and stuff of let variables
-    zipListStrWithPrefix(Set__Str__letVariableNames, 'Vlet__',   Set__Str__letVariablesWithPrefix),
+    zipListStrWithPrefix(Set__Str__letVariableNames, 'VLet__',   Set__Str__letVariablesWithPrefix),
     listStrJoinComma(Set__Str__letVariablesWithPrefix,   Str__srcProlog__letVariables), % join list of variable names to string
 
 
@@ -623,7 +649,7 @@ allocatePredicate(PredIdCounterIn, PredIdCounterOut, List__EntryPredicateArgs, S
     convArgsToPrologVarNames(List__EntryPredicateArgs, List__EntryPredicateArgsAsPrologSrc),
     
     % build the string and stuff of let variables
-    zipListStrWithPrefix(Set__Str__letVariableNames, 'Vlet__',   Set__Str__letVariablesWithPrefix),
+    zipListStrWithPrefix(Set__Str__letVariableNames, 'VLet__',   Set__Str__letVariablesWithPrefix),
     listStrJoinComma(Set__Str__letVariablesWithPrefix, Str__srcProlog__letVariables), % join list of variable names to string
 
     strFormat("[~w]", [Str__srcProlog__letVariables], Str__srcProlog__let),
@@ -727,7 +753,7 @@ emitPrologFunctionOfMettaFunctionDefinition(
 
 
     % build the string and stuff of let variables
-    zipListStrWithPrefix(Set__Str__letVariableNames__1, 'Vlet__',   Set__Str__letVariablesWithPrefix),
+    zipListStrWithPrefix(Set__Str__letVariableNames__1, 'VLet__',   Set__Str__letVariablesWithPrefix),
     listStrJoinComma(Set__Str__letVariablesWithPrefix, Str__srcProlog__letVariables), % join list of variable names to string
     
 
