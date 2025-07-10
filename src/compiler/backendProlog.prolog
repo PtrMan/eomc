@@ -962,7 +962,8 @@ codeanalysis__decorateWithStatic(decoratedMettaExpr(nil, List__in),   decoratedM
 % helper to collect variable names of the actual assignments of a let expression
 codeanalysis__collectLetVariables__helperForAssignments([], Set__Str__letVariableNames,   Set__Str__letVariableNames).
 codeanalysis__collectLetVariables__helperForAssignments([decoratedMettaExpr(_,[var(Str__varname)|_])|List__tail__in], Set__Str__letVariableNames__in,   Set__Str__letVariableNames__out) :-
-    set_put(Str__varname, Set__Str__letVariableNames__in,   Set__Str__letVariableNames__out),
+    codeanalysis__collectLetVariables__helperForAssignments(List__tail__in, Set__Str__letVariableNames__in,   Set__Str__letVariableNames__1),
+    set_put(Str__varname, Set__Str__letVariableNames__1,   Set__Str__letVariableNames__out),
     true.
 
 
