@@ -93,11 +93,12 @@ pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['cdr-atom', metaExpr(List)]), _,   Res
 
 % MeTTa superpose()
 pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['superpose', mettaExpr(List)]), _, Res) :-
-    % superpose takes a expression in MeTTa and converts it nondeterministic dataflow.
+    % superpose takes a expression in MeTTa and converts it nondeterministic controlflow and dataflow.
     %
     % we are using the predicate member/2 to do this in Prolog.
     member(Res, List).
 
 % manual-test with
 % :- pred__(a, a, mettaExpr(['superpose', mettaExpr([a,b])]), [], Res).
+
 

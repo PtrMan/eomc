@@ -436,15 +436,94 @@ emitPrologFunctionForAst__Recursive(
 
 
 
+
+
+
+
+% collapse/1() MeTTa function needs special treatment.
+% reason is that the outgoing dataflow depends on nondeterministic computation in the child
+emitPrologFunctionForAst__Recursive(decoratedMettaExpr(invokeFunction(_),['collapse', AstNode__child]), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,    Str__SrcProlog__dest, Int__PredicateIdRes) :-
+
+    !, % drop all other backtracking
+
+    % build the string and stuff of let variables
+    zipListStrWithPrefix(Set__Str__letVariableNames, "VLet__",   Set__Str__letVariablesWithPrefix),
+    listStrJoinComma(Set__Str__letVariablesWithPrefix,   Str__srcProlog__letVariables), % join list of variable names to string
+
+
+	allocatePredicate(PredIdCounterIn, PredIdCounter1, List__EntryPredicateArgs, Set__Str__letVariableNames,   Int__PredicateIdRes, Str__srcProlog__predicateHead), % allocate new predicate, generate head of predicate
+    
+    
+    
+    
+    emitPrologFunctionForAst__Recursive(AstNode__child, ctx(PredIdCounter1), ctx(PredIdCounter2), List__EntryPredicateArgs, Set__Str__letVariableNames,     Str__SrcProlog__invoked, Int__predicateId__invoked),
+    
+
+
+    %%%%%%strConcat([Str__SrcProlog__condition, Str__SrcProlog__trueCodepath, Str__SrcProlog__falseCodepath],   Str__srcProlog__calledPredicates),
+    
+    
+    
+    convArgsToPrologVarNames(List__EntryPredicateArgs, List__EntryPredicateArgsAsPrologSrc),
+	listStrJoinComma(List__EntryPredicateArgsAsPrologSrc, Str__srcProlog__predicateArgs),
+    
+    
+    count(List__EntryPredicateArgs,   Int__countOfArguments),
+    ( Int__countOfArguments > 0 -> Str__srcProlog__predicateArgsComma = ',' ; Str__srcProlog__predicateArgsComma = '' ),
+    
+
+
+
+
+
+    
+    
+    %%%strFormat('\n\n\n~w~w\n\n~w~w', [Str__srcProlog__helperTrueCodepath, Str__srcProlog__predicatebodyForTrueCodepath, Str__srcProlog__helperFalseCodepath, Str__srcProlog__predicatebodyForFalseCodepath],   Str__srcProlog__predicatesForConditionIndirection),
+    
+    
+    
+    strConcat([Str__SrcProlog__invoked],   Str__predicatesA),
+    
+    
+    
+    
+    strFormat(" % collapse takes a expression in MeTTa which is nondeterministic and converts it deterministic controlflow and dataflow.\n %\n % we are using the predicate findall/3 to do this in Prolog.\n", [], Str__srcProlog__explaination),
+    strFormat(" findall(FindallRes, pred~w(runtimeCtx(), runtimeCtx()  ~w~w, [~w], FindallRes),   ResCollection),\n", [Int__predicateId__invoked, Str__srcProlog__predicateArgsComma, Str__srcProlog__predicateArgs, Str__srcProlog__letVariables],   Str__srcProlog__invokeFindall),
+    strFormat(" Res = mettaExpr(ResCollection).\n", [],   Str__srcProlog__2),
+
+    strConcat([Str__srcProlog__predicateHead, Str__srcProlog__explaination, Str__srcProlog__invokeFindall, Str__srcProlog__2],  Str__srcProlog__predicate),
+    
+    
+    
+    % emit complete code
+    strConcat([Str__predicatesA, Str__srcProlog__predicate],   Str__SrcProlog__dest),
+    
+    
+    PredIdCounterOut is PredIdCounter2,
+    
+    true.
+
+
+
+
+
+
+
+
+
 extractCallsitesAndPredicateCodeFromListOfPredicateSiteInfo([],   [], []).
 extractCallsitesAndPredicateCodeFromListOfPredicateSiteInfo([tuplePredicateSiteInfo(Str__srcProlog__predicate, Str__srcProlog__invocationSite, Int__PredicateIdRes)|List__tail],    [Str__srcProlog__invocationSite|List__tail__str__srcProlog__invocationsites], [Str__srcProlog__predicate|List__tail__str__predicatesOfArgs]) :-
     extractCallsitesAndPredicateCodeFromListOfPredicateSiteInfo(List__tail,   List__tail__str__srcProlog__invocationsites, List__tail__str__predicatesOfArgs).
 
 
+
+
+
+
+
+
+
 % AST-node to invoke a metta function
-% astNode(invokeFunction, <NAME>, <ARRAY OF AST-NODES OF ARGUMENTS>)
-
-
 emitPrologFunctionForAst__Recursive(decoratedMettaExpr(invokeFunction(Str__nameOfFunction),[_|Arr__astNodesOfArguments]), ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__EntryPredicateArgs, Set__Str__letVariableNames,   Str__SrcProlog__dest, Int__PredicateIdRes) :-
 
     % build the string of let variables
@@ -1089,6 +1168,19 @@ ast__collectVarNames(_, Set,   Set). % default fallback for all other stuff in t
 %     dispatch(runtimeCtx(), runtimeCtx(), VArg__B), Res_1),
 %     Res is Res_0 + Res1,
 %     true.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
