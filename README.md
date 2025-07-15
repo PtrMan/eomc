@@ -16,11 +16,15 @@ source source code is read from a0.metta
 
 basic running
 
-    swipl -s ./src/compiler/entryCompiler.prolog -g entryCompiler -g halt
+    ./eomc.sh
 
 running with dumping generated code to terminal
 
-    swipl -s ./src/compiler/entryCompiler.prolog -g entryCompiler -g halt    && echo "" && cat generated0.prolog
+    ./eomc.sh    && echo "" && cat generated0.prolog
+
+running with dumping generated code to terminal and executing generated program with swi-prolog
+
+    ./eomc.sh && cat generated0.prolog     && swipl -s generated0.prolog -g entry0 -g halt
 
 #### basic source code examples
 
@@ -57,6 +61,8 @@ source code is assumed to contain only one function declaration. Only integers a
 | basic math (+, *, etc.) | - | yes |
 | basic math (cos, etc.) | - | (yes) |
 | comparison | - | yes |
+| collapse function | - | yes |
+| superpose function | - | yes |
 | match function | - | no |
 | call into python | - | no |
 
