@@ -43,9 +43,10 @@ entryCompiler :-
     Ctx0 = ctx(0),
     
     
- 
+    % HACK : we hardcoded the set of functionnames for now
+    Set__Str__functionnames = ['+','-','*','/', 'cos', 'sin', 'exp', 'log', 'tan', 'tanh',  '<', '>', '==',   'index-atom', 'car-atom', 'cdr-atom',   'superpose', 'collapse'],
 
-    emitPrologFunctionOfMettaFunctionDefinition(Ast__functionDeclaration, Ctx0, Ctx1, Str__SrcProlog__generated, Int__PredicateIdRes),
+    emitPrologFunctionOfMettaFunctionDefinition(Ast__functionDeclaration, Ctx0, Ctx1, Set__Str__functionnames,  Str__SrcProlog__generated, Int__PredicateIdRes),
     
 
     format('\n\n\n~w\n', [Str__SrcProlog__generated]),
