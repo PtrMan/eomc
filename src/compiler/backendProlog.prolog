@@ -1,3 +1,4 @@
+
 % see https://stackoverflow.com/questions/7808766/how-to-check-a-variable-is-a-string-or-a-number-in-prolog
 checkIsString(Object) :-
     forall(member(X, Object), number(X)).
@@ -49,6 +50,12 @@ set_contains([], _,   false).
 
 % put without checking if item is already in set
 set_put(Val, List,   [Val|List]).
+
+
+
+
+
+
 
 
 

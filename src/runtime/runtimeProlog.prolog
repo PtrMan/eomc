@@ -84,6 +84,21 @@ pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['cdr-atom', metaExpr(List)]), _,   Res
     listRetCdr(List,   Res).
 
 
+% function for unittests for checking if compiler produced correct code which leads to correct result
+pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['assereq2', A, B]), _,   Res) :-
+    Z0 is A - B,
+    Z1 is abs(Z0),
+
+    ( Z1 < 0.001 ->
+        true
+    ;
+        halt(1) % terminate with error return code
+    ),
+    
+    Res = true,
+    
+    true.
+
 
 
 

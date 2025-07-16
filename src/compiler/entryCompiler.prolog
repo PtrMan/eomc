@@ -17,12 +17,19 @@ write_string_to_file(FileName, Content) :-
 
 
 entryCompiler :-
-    Str__pathToMettaSrc = './a0.metta',
+
+    current_prolog_flag(argv, SwiplArgs), % get command line arguments
+
+    write(SwiplArgs),nl,
+
+    [Str__pathToMettaSrc|_] = SwiplArgs,
+
+
+    %Str__pathToMettaSrc = './a0.metta',
 
     read_file_to_string(Str__pathToMettaSrc, Str__srcMetta, []),
 
-    print(Str__srcMetta),
-    nl,
+    write(Str__srcMetta),nl,
 
     % * parse MeTTa
     parserForMetta(Str__srcMetta,   List__ast),
@@ -41,7 +48,7 @@ entryCompiler :-
     
     
     % HACK : we hardcoded the set of functionnames for now
-    Set__Str__functionnames = ['+','-','*','/', 'cos', 'sin', 'exp', 'log', 'tan', 'tanh',  '<', '>', '==',   'index-atom', 'car-atom', 'cdr-atom',   'superpose', 'collapse'],
+    Set__Str__functionnames = ['+','-','*','/', 'cos', 'sin', 'exp', 'log', 'tan', 'tanh',  '<', '>', '==',   'index-atom', 'car-atom', 'cdr-atom',   'let2', 'superpose', 'collapse',    'assereq2'],
 
     format("TRACE : GenFn: generate definitions of functions\n"),
 
@@ -68,7 +75,7 @@ entryCompiler :-
     Str__pathOfOutput = 'generated0.prolog',
     write_string_to_file(Str__pathOfOutput, Str__srcProlog__output),
 
-
+    halt, % end program
 
     true.
 
