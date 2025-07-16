@@ -37,7 +37,7 @@ source code is assumed to contain only one function declaration. Only integers a
 #### limitations / assumptions
 
 * compiler: there is virtually no semantics checking. The code has to be sematically correct so that the compiler produces correct output.
-* runtime: there is virtually no stdlib implemented.
+* runtime: there is a very minimal stdlib implemented.
 * only the simplistic bare minimal features of the language are supported for now. That means no `match` etc.
 
 #### support table of compiler+libraries
@@ -47,11 +47,11 @@ source code is assumed to contain only one function declaration. Only integers a
 | datatype:boolean | yes | yes |
 | datatype:int | yes | yes |
 | datatype:float | yes | yes |
-| function declaration | partial(one) | partial(one) |
+| function declaration | full | full |
 | function invocation | yes | yes |
 | variable definition/usage | yes | yes |
 | control flow: conditionals | yes | yes |
-| control flow: sequential | no | no |
+| control flow: sequential | - | no |
 | data flow: let | yes | yes |
 | datastructure declaration | no | no |
 | datastructure unification | - | no |

@@ -36,9 +36,6 @@ entryCompiler :-
 
 
 
-    % HACKY : for now we assume only one function declaration in the metta code . we take the first function declaration
-    [Ast__functionDeclaration|_] = List__ast,
-
     
     Ctx0 = ctx(0),
     
@@ -46,10 +43,14 @@ entryCompiler :-
     % HACK : we hardcoded the set of functionnames for now
     Set__Str__functionnames = ['+','-','*','/', 'cos', 'sin', 'exp', 'log', 'tan', 'tanh',  '<', '>', '==',   'index-atom', 'car-atom', 'cdr-atom',   'superpose', 'collapse'],
 
-    emitPrologFunctionOfMettaFunctionDefinition(Ast__functionDeclaration, Ctx0, Ctx1, Set__Str__functionnames,  Str__SrcProlog__generated, Int__PredicateIdRes),
-    
+    format("TRACE : GenFn: generate definitions of functions\n"),
+
+
+    emitPrologFunctionOfMettaFunctionDefinitions(List__ast, Ctx0, Ctx1, Set__Str__functionnames,    Str__SrcProlog__generated),
 
     format('\n\n\n~w\n', [Str__SrcProlog__generated]),
+
+    format("TRACE : GenFn: done\n"),
 
 
     Str__pathToPrologRuntimeSrc = './src/runtime/runtimeProlog.prolog',

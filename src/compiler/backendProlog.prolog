@@ -753,8 +753,30 @@ emitPrologFunctionOfMettaFunctionDefinition(
 
 
 
+emitPrologFunctionOfMettaFunctionDefinitions(
+    [],
+    ctx(PredIdCounter), ctx(PredIdCounter), _,    ""
+) :-
+    true.
 
+emitPrologFunctionOfMettaFunctionDefinitions(
+    [mettaFunctionDefinition(AstNode__headArgument, AstNode__body__in)|List__tail],
+    ctx(PredIdCounterIn), ctx(PredIdCounterOut), List__Str__functionNames,    Str__SrcProlog__dest
+) :-
 
+    emitPrologFunctionOfMettaFunctionDefinitions(
+        List__tail,
+        ctx(PredIdCounterIn), ctx(PredIdCounter1), List__Str__functionNames,    Str__SrcProlog__fromRecursion
+    ),
+
+    emitPrologFunctionOfMettaFunctionDefinition(
+        mettaFunctionDefinition(AstNode__headArgument, AstNode__body__in),
+        ctx(PredIdCounter1), ctx(PredIdCounterOut), List__Str__functionNames,    Str__SrcProlog__ofDefinition, _
+    ),
+
+    strConcat([Str__SrcProlog__ofDefinition, Str__SrcProlog__fromRecursion],    Str__SrcProlog__dest),
+
+    true.
 
 
 
