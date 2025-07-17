@@ -68,3 +68,9 @@ running with dumping generated code to terminal and executing generated program 
 #### supported Prolog environments
 
 for the compiler swi-prolog is supported. Backend swi-prolog is supported and recommended. Other Prolog environments such as GNU-prolog could also work.
+
+#### stable versions
+
+here are version which are relativly stable
+
+https://github.com/PtrMan/eomc/tree/59e0ae8bda0011ced181f50a80942c84b5f0206c from 07-17-2025
