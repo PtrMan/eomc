@@ -117,3 +117,8 @@ pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['superpose', mettaExpr(List)]), _, Res
 % :- pred__(a, a, mettaExpr(['superpose', mettaExpr([a,b])]), [], Res).
 
 
+% MeTTa sequence()
+pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['sequence'|List__argsTail]), _, Res) :-
+    % here we aren't doing anything except to retturn the last argumen
+
+    last(List__argsTail, Res).
