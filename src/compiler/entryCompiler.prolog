@@ -47,8 +47,20 @@ entryCompiler :-
     Ctx0 = ctx(0),
     
     
-    % HACK : we hardcoded the set of functionnames for now
-    Set__Str__functionnames = ['+','-','*','/', 'cos', 'sin', 'exp', 'log', 'tan', 'tanh',  '<', '>', '==',   'index-atom', 'car-atom', 'cdr-atom',   'let2', 'superpose', 'collapse',    'assereq2'],
+    % hardcoded the set of functionnames
+    Set__Str__functionnamesHardcoded = ['+','-','*','/', 'cos', 'sin', 'exp', 'log', 'tan', 'tanh',  '<', '>', '==',   'index-atom', 'car-atom', 'cdr-atom',   'let2', 'superpose', 'collapse',    'assereq2'],
+
+
+
+
+
+    functionDefinitions__extractFunctionnames(List__ast,   List__str__functionnamesExtracted), % extract the functionnames
+
+    format("DBG : extracted functionnames:\n"),
+    write(List__str__functionnamesExtracted),nl,
+
+    append(Set__Str__functionnamesHardcoded, List__str__functionnamesExtracted,   Set__Str__functionnames),
+
 
     format("TRACE : GenFn: generate definitions of functions\n"),
 
