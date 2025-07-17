@@ -1,4 +1,3 @@
-
 experimental optimizing MeTTa compiler.
 
 Compiles MeTTa to a target language which is prolog. The target language output is slightly optimized.
@@ -28,8 +27,6 @@ running with dumping generated code to terminal and executing generated program 
 
 #### basic source code examples
 
-source code is assumed to contain only one function declaration. Only integers and calls to functions are supported at this stage.
-
     (= (exampleFunctionA)  (*  (+ 2.2 3) 6) )
 
 <br />
@@ -37,8 +34,9 @@ source code is assumed to contain only one function declaration. Only integers a
 #### limitations / assumptions
 
 * compiler: there is virtually no semantics checking. The code has to be sematically correct so that the compiler produces correct output.
+* lexer : the lexeer doesn't parse anything with `*`, `-` etc. correctly. so `let2` has to be used instead of `let*`  etc. for now.
 * runtime: there is a very minimal stdlib implemented.
-* only the simplistic bare minimal features of the language are supported for now. That means no `match` etc.
+* only the simplistic bare minimal features of the language are supported for now. That means no `match`, `case` etc.
 
 #### support table of compiler+libraries
 
@@ -51,10 +49,10 @@ source code is assumed to contain only one function declaration. Only integers a
 | function invocation | yes | yes |
 | variable definition/usage | yes | yes |
 | control flow: conditionals | yes | yes |
-| control flow: sequential | - | no |
+| control flow: sequential | - | yes |
 | data flow: let | yes | yes |
-| datastructure declaration | no | no |
-| datastructure unification | - | no |
+| datastructure declaration | yes | yes |
+| datastructure unification | - | (yes) |
 
 | feature | parser | runtime |
 | :--- | :--- | :--- |
