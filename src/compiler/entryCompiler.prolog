@@ -16,10 +16,18 @@ write_string_to_file(FileName, Content) :-
     ).
 
 
+
+% compiler config flags
+
+% ... load the MeTTa standard library?
+retSettingOfCompilerConfig("withMettaStdLibInMetta", true).
+
+
 entryCompiler :-
 
     current_prolog_flag(argv, SwiplArgs), % get command line arguments
 
+    write("args="),nl,
     write(SwiplArgs),nl,
 
     [Str__pathToMettaSrc|_] = SwiplArgs,
@@ -27,12 +35,23 @@ entryCompiler :-
 
     %Str__pathToMettaSrc = './a0.metta',
 
-    read_file_to_string(Str__pathToMettaSrc, Str__srcMetta, []),
+    read_file_to_string(Str__pathToMettaSrc, Str__srcMettaOfInput, []),
 
-    write(Str__srcMetta),nl,
+    %write(Str__srcMettaOfInput),nl,
+
+    % load runtime of metta
+    retSettingOfCompilerConfig("withMettaStdLibInMetta", Bool__enMettaStdLibInMetta),
+    ( Bool__enMettaStdLibInMetta ->
+        read_file_to_string("./src/runtime/runtimeMetta.metta", Str__srcRuntimeMetta, [])
+        ;
+        Str__srcRuntimeMetta = ""
+    ),
+
+
+    strConcat([Str__srcRuntimeMetta, Str__srcMettaOfInput],   Str__srcMettaAll),
 
     % * parse MeTTa
-    parserForMetta(Str__srcMetta,   List__ast),
+    parserForMetta(Str__srcMettaAll,   List__ast),
 
 
     % * generate code with the prolog backend
