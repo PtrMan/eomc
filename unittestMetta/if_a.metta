@@ -1,3 +1,3 @@
 (= (exampleFunctionA $X)
-    (assereq2 12 (if true 12 11))
+    (asserteq2 12 (if true 12 11))
 )

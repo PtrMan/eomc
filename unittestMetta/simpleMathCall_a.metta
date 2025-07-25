@@ -1,3 +1,3 @@
 (= (exampleFunctionA $X)
-    (assereq2 5 (+ 2 3))
+    (asserteq2 5 (+ 2 3))
 )

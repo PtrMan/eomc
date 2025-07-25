@@ -48,7 +48,7 @@ entryCompiler :-
     
     
     % hardcoded the set of functionnames
-    Set__Str__functionnamesHardcoded = ['+','-','*','/', 'cos', 'sin', 'exp', 'log', 'tan', 'tanh',  '<', '>', '==',   'index-atom', 'car-atom', 'cdr-atom',   'let2', 'superpose', 'collapse',    'assereq2'],
+    Set__Str__functionnamesHardcoded = ['+','-','*','/', 'cos', 'sin', 'exp', 'log', 'tan', 'tanh',  '<', '>', '==',   'index-atom', 'car-atom', 'cdr-atom',   'let2', 'superpose', 'collapse',    'asserteq2', 'writeln2'],
 
 
 
@@ -77,7 +77,7 @@ entryCompiler :-
 
 
     % HACK : entry code with hardcoded function to call into
-    Str__srcProlog__entry = "\n\n\nentry0 :-\n format(\"TRACE: ENTRY\\n\"),\n pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['examplefunctiona', 10]), _,   Res),\n format(\"~w\\n\", [Res]),\n true.\n",
+    Str__srcProlog__entry = "\n\n\nentry0 :-\n format(\"TRACE: ENTRY\\n\"),\n pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['examplefunctiona', 10]),   Res),\n format(\"~w\\n\", [Res]),\n true.\n",
 
 
     % bundle up with runtime and code for entry

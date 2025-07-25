@@ -1,5 +1,5 @@
 (= (exampleFunctionA $X)
-    (assereq2 3 
+    (asserteq2 3 
         (let2 (
             ($A 3)
             )
