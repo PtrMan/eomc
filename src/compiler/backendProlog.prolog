@@ -8,6 +8,8 @@ checkBoolean(Val) :-
     Val == true; Val == false.
 
 
+
+
 count([], 0).
 count([_|Tail], Int) :-
     count(Tail, Int__tailCount),
@@ -30,6 +32,10 @@ strConcat([Str__head|T], Str__dest) :-
 % helper to abstract away formating of string
 strFormat(Str_format, Arr__args,   Str__output) :-
     format(string(Str__output), Str_format, Arr__args).
+
+% helper
+convIntToStr(Int,   Str) :-
+	strFormat("~w", [Int],   Str).
 
 zipListStrWithPrefix([], _,   []).
 zipListStrWithPrefix([Str__head__varname|List__tailOf__varnames], Str__prefix,   [Str__result|List__varnamesWithPrefixes]) :-
@@ -75,6 +81,26 @@ convArgsToPrologVarNames([H|T], [H2|T2]) :-
     convArgToPrologVarName(H, H2),
     convArgsToPrologVarNames(T, T2).
 
+
+
+
+% convert list of strings of arguments to Prolog-Source code
+%
+convListOfArgumentsToPrologSrc([],   ",").
+convListOfArgumentsToPrologSrc(List__str__list,   Str__concatenated) :-
+    convArgsToPrologVarNames(List__str__list,   List__srcProlog__list),
+	listStrJoin(List__srcProlog__list, ",",   Str__concatenated2),
+    strConcat([",", Str__concatenated2],   Str__concatenated). % add comma in front
+
+
+
+
+% build the string of let variables
+convLetVariablesToPrologSrc(Set__Str__letVariableNames,   Str__srcProlog__letVariablesAsList) :-
+    zipListStrWithPrefix(Set__Str__letVariableNames, 'VLet__',   Set__Str__letVariablesWithPrefix),
+    listStrJoinComma(Set__Str__letVariablesWithPrefix,   Str__srcProlog__letVariables), % join list of variable names to string
+
+    strFormat("[~w]", [Str__srcProlog__letVariables],   Str__srcProlog__letVariablesAsList).
 
 
 
@@ -550,11 +576,22 @@ genCodeV2_match(List__EntryPredicateArgs, Set__Str__letVariableNames,  Expr__que
 		%
 		% "Expr__query" is the expression of the query (as from the AST)
 		%%%Expr__query = decoratedMettaExpr(nil, []), % for testing
-		convAstExprToTargetProlog(Expr__query, "VarLet__",   Str__srcProlog__expressionToQuery),
+		%convAstExprToTargetProlog(Expr__query, "VarLet__",   Str__srcProlog__expressionToQuery),
+        convAstExprToTargetProlog2(Expr__query, List__EntryPredicateArgs,    Str__srcProlog__expressionToQuery),
 
 
 		convIntToStr(Int__idOfInvokedPred,   Str__idOfInvokedPred),
 
+
+
+        write("genCodeV2_match"),nl, % DEBUG
+        write(Set__Str__letVariableNames),nl, % DEBUG
+        write(Str__srcProlog__letVariablesAsList),nl, % DEBUG
+
+        write("\n"), % DEBUG
+
+
+        write(List__EntryPredicateArgs),nl, % DEBUG
         write(Str__srcProlog__entryPredicateArgs),nl, % DEBUG
 
         true
@@ -910,7 +947,7 @@ emitPrologFunctionOfMettaFunctionDefinition(
     format('~w\n', [AstNode__decoratedBody]),
 
     % convert the head-argument to the Prolog source, which represents the head. Idea here is to leave the heavy lifting for unification to the prolog runtime of the prolog target
-    convAstExprToTargetProlog(AstNode__headArgument, 'Varg__',    Str__srcProlog__headArgument),
+    convAstExprToTargetProlog2(AstNode__headArgument, Set__Str__headVariables,    Str__srcProlog__headArgument),
 
     %format('DBG ~w\n', Str__srcProlog__headArgument),
 
@@ -1104,19 +1141,22 @@ codeanalysis__collectLetVariables(_, Set__Str__letVariableNames,   Set__Str__let
 
 
 
+
+
+
 %  emits mettaExpr(<LIST>)
 % helper to convert list of AST-expression to list of strings of prolog target code
-convAstExprToTargetProlog__helper__convList([], _,   []).
-%%convAstExprToTargetProlog__helper__convList([AstExpr], [Str__srcProlog]) :-
-%%    convAstExprToTargetProlog(AstExpr,   Str__srcProlog).
-convAstExprToTargetProlog__helper__convList([AstExpr|List__astTail], Str__variablePrefix,   [Str__srcProlog|List__str__srcProlog]) :-
-    convAstExprToTargetProlog__helper__convList(List__astTail, Str__variablePrefix,   List__str__srcProlog),
-    convAstExprToTargetProlog(AstExpr, Str__variablePrefix,   Str__srcProlog).
+convAstExprToTargetProlog2__helper__convList([], _,   []).
+%%convAstExprToTargetProlog2__helper__convList([AstExpr], [Str__srcProlog]) :-
+%%    convAstExprToTargetProlog2(AstExpr,   Str__srcProlog).
+convAstExprToTargetProlog2__helper__convList([AstExpr|List__astTail], Set__varNamesOfArgs,   [Str__srcProlog|List__str__srcProlog]) :-
+    convAstExprToTargetProlog2__helper__convList(List__astTail, Set__varNamesOfArgs,   List__str__srcProlog),
+    convAstExprToTargetProlog2(AstExpr, Set__varNamesOfArgs,   Str__srcProlog).
 
 % convert a AST-expression to prolog target
-convAstExprToTargetProlog(decoratedMettaExpr(_, List__inner), Str__variablePrefix,   Str__srcProlog) :-
+convAstExprToTargetProlog2(decoratedMettaExpr(_, List__inner), Set__varNamesOfArgs,   Str__srcProlog) :-
     
-    convAstExprToTargetProlog__helper__convList(List__inner, Str__variablePrefix,   List__str__srcPrologInner),
+    convAstExprToTargetProlog2__helper__convList(List__inner, Set__varNamesOfArgs,   List__str__srcPrologInner),
     listStrJoin(List__str__srcPrologInner, ',',   Str__strProlog__inner),
     
     strFormat('mettaExpr([~w])', [Str__strProlog__inner],   Str__srcProlog),
@@ -1125,32 +1165,38 @@ convAstExprToTargetProlog(decoratedMettaExpr(_, List__inner), Str__variablePrefi
     
     true.
 
+convAstExprToTargetProlog2(var(Str__name), Set__varNamesOfArgs,   Str__srcProlog) :-
+    set_contains(Set__varNamesOfArgs, Str__name,   Bool__contains),
+
+    ( Bool__contains ->
+        strFormat('VArg__~w', [Str__name],   Str__srcProlog)
+        ;
+        strFormat('VLet__~w', [Str__name],   Str__srcProlog)
+    ),
+
+
+    % TODO TODO
+    %strFormat('~w~w', [Str__variablePrefix, Str__name],   Str__srcProlog).
+
+    true.
 
 % convert a AST-expression to prolog target
-% Str__variablePrefix is the prefix for used variable-names
-convAstExprToTargetProlog(var(Str__name), Str__variablePrefix,   Str__srcProlog) :-
-    strFormat('~w~w', [Str__variablePrefix, Str__name],   Str__srcProlog).
-
-% convert a AST-expression to prolog target
-convAstExprToTargetProlog(Val, _,    Str__srcProlog) :-
+convAstExprToTargetProlog2(Val, _,    Str__srcProlog) :-
     number(Val), % Val must be a number
     strFormat('~w', [Val],   Str__srcProlog).
 
 % convert a AST-expression to prolog target
-convAstExprToTargetProlog(Val, _,    Str__srcProlog) :-
+convAstExprToTargetProlog2(Val, _,    Str__srcProlog) :-
     checkBoolean(Val), % Val must be a boolean
     strFormat('~w', [Val],   Str__srcProlog).
 
 % convert a AST-expression to prolog target
-convAstExprToTargetProlog(Str, _,    Str__srcProlog) :-
+convAstExprToTargetProlog2(Str, _,    Str__srcProlog) :-
     checkIsString(Str), % Val must be a string
     strFormat('\'~w\'', [Str],   Str__srcProlog).
 
-
 % manual test
-%    ?- convAstExprToTargetProlog(decoratedMettaExpr(nil, ['a', 5, var('B')]), 'Varg__',    Str).
-
-
+%    ?- convAstExprToTargetProlog2(decoratedMettaExpr(nil, ['a', 5, var('B')]), ['B'],    Str).
 
 
 
@@ -1256,29 +1302,6 @@ functionDefinitions__extractFunctionnames([H|T],   [Str_head|List__Str__tail]) :
 
 
 
-
-
-% helper
-convIntToStr(Int,   Str) :-
-	strFormat("~w", [Int],   Str).
-
-
-% convert list of strings of arguments to Prolog-Source code
-%
-convListOfArgumentsToPrologSrc([],   ",").
-convListOfArgumentsToPrologSrc(List__str__list,   Str__concatenated) :-
-	listStrJoin(List__str__list, ",",   Str__concatenated2),
-    strConcat([",", Str__concatenated2],   Str__concatenated). % add comma in front
-
-
-
-
-% build the string of let variables
-convLetVariablesToPrologSrc(Set__Str__letVariableNames,   Str__srcProlog__letVariablesAsList) :-
-    zipListStrWithPrefix(Set__Str__letVariableNames, 'VLet__',   Set__Str__letVariablesWithPrefix),
-    listStrJoinComma(Set__Str__letVariablesWithPrefix,   Str__srcProlog__letVariables), % join list of variable names to string
-
-    strFormat("[~w]", [Str__srcProlog__letVariables],   Str__srcProlog__letVariablesAsList).
 
 
 

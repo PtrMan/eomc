@@ -99,8 +99,12 @@ entryCompiler :-
     Str__srcProlog__entry = "\n\n\nentry0 :-\n format(\"TRACE: ENTRY\\n\"),\n pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['examplefunctiona', 10]),   Res),\n format(\"~w\\n\", [Res]),\n true.\n",
 
 
+    % preamble for emitted prolog code
+    Str__srcProlog__preamble = "% we need this because the prolog code for MeTTa match()/3 and MeTTa add-atom() in MeTTa add predicates at runtime\n:- dynamic datSpace/2.\n\n",
+
+
     % bundle up with runtime and code for entry
-    strConcat([Str__srcProlog__runtime, '\n', Str__SrcProlog__generated,  Str__srcProlog__entry],   Str__srcProlog__output),
+    strConcat([Str__srcProlog__preamble, Str__srcProlog__runtime, '\n', Str__SrcProlog__generated,  Str__srcProlog__entry],   Str__srcProlog__output),
 
 
     Str__pathOfOutput = 'generated0.prolog',
