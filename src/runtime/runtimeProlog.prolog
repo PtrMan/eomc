@@ -19,20 +19,24 @@ pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['tan', Arg]),  Res) :-
     Res is tan(Arg).
 pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['tanh', Arg]),  Res) :-
     Res is tanh(Arg).
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['acos', Arg]),  Res) :-
+    Res is acos(Arg).
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['asin', Arg]),  Res) :-
+    Res is asin(Arg).
 
-pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['>', A, B]),  Res) :-
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['gt', A, B]),  Res) :-
     (   A > B
     ->  Z = true
     ;   Z = false
     ).
 
-pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['<', A, B]),  Res) :-
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['lt', A, B]),  Res) :-
     (   A < B
     ->  Z = true
     ;   Z = false
     ).
 
-pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['==', A, B]),  Res) :-
+pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['eq', A, B]),  Res) :-
     (   A == B
     ->  Z = true
     ;   Z = false
@@ -128,3 +132,21 @@ pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['sequence'|List__argsTail]),  Res) :-
     % here we aren't doing anything except to retturn the last argumen
 
     last(List__argsTail, Res).
+
+
+
+
+% MeTTa add-atom
+pred__(RuntimeCtx, RuntimeCtx, mettaExpr(['addatom2', Str__space, Expr__atom]),   Res) :-
+    
+    Clause = datSpace(Str__space, Expr__atom),
+
+    assertz(Clause),
+
+    Res = true,
+
+    true.
+
+
+
+

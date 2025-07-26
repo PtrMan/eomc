@@ -67,7 +67,7 @@ entryCompiler :-
     
     
     % hardcoded the set of functionnames
-    Set__Str__functionnamesHardcoded = ['+','-','*','/', 'cos', 'sin', 'exp', 'log', 'tan', 'tanh',  '<', '>', '==',   'index-atom', 'car-atom', 'cdr-atom',   'let2', 'superpose', 'collapse',    'asserteq2', 'writeln2'],
+    Set__Str__functionnamesHardcoded = ['+','-','*','/', 'cos', 'sin', 'exp', 'log', 'tan', 'tanh',  '<', '>', '==',   'index-atom', 'car-atom', 'cdr-atom',   'let2', 'superpose', 'collapse',    'addatom2',    'asserteq2', 'writeln2'],
 
 
 
