@@ -970,7 +970,7 @@ emitPrologFunctionOfMettaFunctionDefinition(
 
 	
     % build the string of the arguments
-    zipListStrWithPrefix(Set__Str__headVariables, 'Varg__',   Set__Str__headVariablesWithPrefix),
+    zipListStrWithPrefix(Set__Str__headVariables, 'VArg__',   Set__Str__headVariablesWithPrefix),
     listStrJoinComma(Set__Str__headVariablesWithPrefix, Str__srcProlog__predicateArgs), % join list of variable names to string
     
 
