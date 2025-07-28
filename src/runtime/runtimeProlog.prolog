@@ -26,20 +26,20 @@ pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['asin', Arg]),  Res) :-
 
 pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['gt', A, B]),  Res) :-
     (   A > B
-    ->  Z = true
-    ;   Z = false
+    ->  Res = true
+    ;   Res = false
     ).
 
 pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['lt', A, B]),  Res) :-
     (   A < B
-    ->  Z = true
-    ;   Z = false
+    ->  Res = true
+    ;   Res = false
     ).
 
 pred__(runtimeCtx(), runtimeCtx(), mettaExpr(['eq', A, B]),  Res) :-
     (   A == B
-    ->  Z = true
-    ;   Z = false
+    ->  Res = true
+    ;   Res = false
     ).
 
 
