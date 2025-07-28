@@ -11,19 +11,19 @@ install swi-prolog dependencies by running the prolog and confirming everything 
 
 #### how to run
 
-source source code is read from a0.metta
+source source code is read from PATHTOFILE
 
 basic running
 
-    ./eomc.sh
+    ./eomc.sh PATHTOFILE
 
 running with dumping generated code to terminal
 
-    ./eomc.sh    && echo "" && cat generated0.prolog
+    ./eomc.sh PATHTOFILE   && echo "" && cat generated0.prolog
 
 running with dumping generated code to terminal and executing generated program with swi-prolog
 
-    ./eomc.sh && cat generated0.prolog     && swipl -s generated0.prolog -g entry0 -g halt
+    ./eomc.sh PATHTOFILE   && cat generated0.prolog     && swipl -s generated0.prolog -g entry0 -g halt
 
 #### basic source code examples
 
@@ -35,8 +35,8 @@ running with dumping generated code to terminal and executing generated program 
 
 * compiler: there is virtually no semantics checking. The code has to be sematically correct so that the compiler produces correct output.
 * lexer : the lexeer doesn't parse anything with `*`, `-` etc. correctly. so `let2` has to be used instead of `let*`  etc. for now.
-* runtime: there is a very minimal stdlib implemented.
-* only the simplistic bare minimal features of the language are supported for now. That means no `match`, `case` etc.
+* runtime: there is only a minimal stdlib implemented.
+* only the simplistic bare minimal features of the language are supported for now. That means no `case` and implementation of interpreterm etc.
 
 #### support table of compiler+libraries
 
@@ -73,4 +73,4 @@ for the compiler swi-prolog is supported. Backend swi-prolog is supported and re
 
 here are version which are relativly stable
 
-https://github.com/PtrMan/eomc/tree/59e0ae8bda0011ced181f50a80942c84b5f0206c from 07-17-2025
+https://github.com/PtrMan/eomc/tree/06117da9455c63629806f015f1e8dd94cbe39e54 from 07-28-2025 . no known issues
