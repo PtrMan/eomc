@@ -50,6 +50,9 @@ entryCompiler :-
 
     strConcat([Str__srcRuntimeMetta, Str__srcMettaOfInput],   Str__srcMettaAll),
 
+
+    ( true -> format("compile trace: parse MeTTa\n") ; true),
+
     % * parse MeTTa
     parserForMetta(Str__srcMettaAll,   List__ast),
 

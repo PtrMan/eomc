@@ -39,12 +39,15 @@ braceContent(braceContent(X,Y)) --> expr(X), braceContent(Y).
 brace2(parsedBrace(X)) --> [punct('(')],  braceContent(X).
 
 
+braceOrExpression(X) --> brace2(X).
+braceOrExpression(X) --> expr(X).
+
 
 
 functionDeclaration(mettaFunctionDefinition(Head, Body)) -->
     [punct('('), punct('=')], 
     brace2(Head),
-    brace2(Body),
+    braceOrExpression(Body),
     [punct(')')].
 
 
